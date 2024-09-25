@@ -1,34 +1,47 @@
+"use client"; // Ensures it's a client component
+
 import React from 'react';
+import { SunIcon, MoonIcon } from '@heroicons/react/24/outline';
 import Link from 'next/link';
-import Image from 'next/image'; // Import the Image component
-import ThemeToggle from './toggletheme'; // Ensure the correct import path
 
+interface NavbarProps {
+  isDarkMode: boolean;
+  toggleTheme: () => void;
+}
 
-const Navbar = () => {
+const Navbar: React.FC<NavbarProps> = ({ isDarkMode, toggleTheme }) => {
   return (
-    <nav className="bg-white bg-opacity-10 backdrop-blur-lg shadow-md py-4 px-8 flex justify-between items-center dark:bg-gray-800">
-      <div className="text-2xl font-bold text-black dark:text-white">
-        <Link href="/">PresentPal</Link>
+    <nav className={`shadow-md py-4 px-6 flex justify-between items-center ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`}>
+      <div className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-black'}`}>
+        PresentPal
       </div>
-      <div className="flex space-x-4 items-center">
-        <Link href="/" className="text-black dark:text-white hover:font-bold">
+      <div className="flex items-center space-x-6">
+        <Link href="dashboard" className={`hover:text-gray-700 ${isDarkMode ? 'text-white' : 'text-black'}`}>
           Home
         </Link>
-        <Link href="/about" className="text-black dark:text-white hover:font-bold">
+        <Link href="/about" className={`hover:text-gray-700 ${isDarkMode ? 'text-white' : 'text-black'}`}>
           About
         </Link>
-        <Link href="/profile">
-          <div className="w-10 h-10 rounded-full overflow-hidden">
-            {/* <Image 
-              src="/profile-pic.jpg" // Path to your profile picture
-              alt="Profile Picture"
-              width={40} // Adjust width as needed
-              height={40} // Adjust height as needed
-              className="object-cover" // Optional: to maintain aspect ratio and cover the div
-            /> */}
-          </div>
+        <Link href="/event" className={`hover:text-gray-700 ${isDarkMode ? 'text-white' : 'text-black'}`}>
+          Event
         </Link>
-        <ThemeToggle />
+        <Link href="/groups" className={`hover:text-gray-700 ${isDarkMode ? 'text-white' : 'text-black'}`}>
+          Groups
+        </Link>
+        <Link href="/registries" className={`hover:text-gray-700 ${isDarkMode ? 'text-white' : 'text-black'}`}>
+          Registries
+        </Link>
+        <button 
+          onClick={toggleTheme} 
+          className="flex items-center justify-center h-10 w-10 rounded-full transition-colors duration-200 
+                     bg-dark dark:bg-white hover:bg-gray-300 dark:hover:bg-gray-600"
+        >
+          {isDarkMode ? (
+            <SunIcon className="h-6 w-6 text-yellow-500" />
+          ) : (
+            <MoonIcon className="h-6 w-6 text-gray-800" />
+          )}
+        </button>
       </div>
     </nav>
   );
