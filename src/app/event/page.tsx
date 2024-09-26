@@ -3,7 +3,6 @@
 import { useState, FC } from 'react';
 import { Card, CardHeader, CardContent, CardTitle, CardDescription } from '@/components/ui/card'; // Import Card components from Shadcn
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover'; // Ensure correct Popover import
-import axios from 'axios';
 
 const Page: FC = () => {
   // State for events
@@ -41,7 +40,7 @@ const Page: FC = () => {
     onClose: () => void;
   }
 
-  const CreateEventPopover: React.FC<CreateEventPopoverProps> = ({ onClose }) => {
+  const CreateEventPopover: FC<CreateEventPopoverProps> = ({ onClose }) => {
     const [eventData, setEventData] = useState({
       userId: 0,
       eventName: '',
@@ -63,17 +62,19 @@ const Page: FC = () => {
       setEventData({ ...eventData, [e.target.name]: values });
     };
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleSubmit = (e: React.FormEvent) => {
       e.preventDefault();
-      try {
-        const response = await axios.post('http://localhost:4000/events/', eventData);
-        console.log(response.data);
-        alert('Event created successfully');
-        onClose(); // Close the popover on successful submission
-      } catch (error) {
-        console.error('Error creating event:', error);
-        alert('Error creating event');
-      }
+      // Create a new event object
+      const newEvent = {
+        id: events.length + 1, // Increment the ID based on the current events length
+        ...eventData,
+      };
+
+      // Update the events state with the new event
+      setEvents((prevEvents) => [...prevEvents, newEvent]);
+
+      alert('Event created successfully');
+      onClose(); // Close the popover on successful submission
     };
 
     return (
@@ -145,7 +146,7 @@ const Page: FC = () => {
             Create Event
           </button>
         </form>
-        <button onClick={onClose} className="mt-4 text-red-500">Close</button> 
+        <button onClick={onClose} className="mt-4 text-red-500">Close</button>
       </PopoverContent>
     );
   };
@@ -190,8 +191,6 @@ const Page: FC = () => {
           )}
         </div>
       </div>
-
-    
     </div>
   );
 };

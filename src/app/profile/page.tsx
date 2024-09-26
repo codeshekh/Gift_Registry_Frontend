@@ -1,30 +1,35 @@
-'use client'; // Mark this file as a client component
+"use client";
+import React from 'react';
+import { useSession } from '@/components/ui/session'; // Ensure this path is correct
 
-import { useEffect, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
+const Profile: React.FC = () => {
+  const session = useSession();
 
-const Profile = () => {
-  const [user, setUser] = useState<any>(null);
-  const searchParams = useSearchParams();
+  // Log session data to debug
+  console.log('Session data:', session);
 
-  useEffect(() => {
-    const userData = searchParams.get('user');
-    if (userData) {
-      setUser(JSON.parse(decodeURIComponent(userData as string)));
-    }
-  }, [searchParams]);
-
-  if (!user) {
-    return <div>Loading...</div>;
+  if (!session) {
+    return <div>Loading...</div>; // Loading state or redirect to login
   }
+
+  const { user } = session;
 
   return (
     <div className="p-6">
-      <h1 className="text-2xl font-bold">Welcome, {user.username}!</h1>
-      <img src={user.profilePic} alt="Profile Picture" className="rounded-full w-32 h-32 my-4" />
-      <p>Email: {user.email}</p>
-      <p>Google ID: {user.googleId}</p>
-      
+      <h1 className="text-2xl font-bold">Profile Page</h1>
+      {user ? (
+        <div className="mt-4">
+          <img 
+            src={user.image || '/onepiece.png'} 
+            alt="Profile" 
+            className="rounded-full h-40 w-40 object-cover"
+          />
+          <h2 className="text-xl mt-2">{user.username}</h2>
+          <p className="text-gray-600">{user.email}</p>
+        </div>
+      ) : (
+        <p>No user data available.</p>
+      )}
     </div>
   );
 };

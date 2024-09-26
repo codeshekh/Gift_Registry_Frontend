@@ -12,11 +12,12 @@ export default function Home() {
     router.push('/dashboard');
   };
 
+  
   return (
     <div 
       className="relative min-h-screen bg-cover bg-center" 
       style={{
-        backgroundImage: "url('/your-background-image.jpg')" // Update with your actual background image path
+        backgroundImage: "url('/signup.jpg')" // Update with your actual background image path
       }}
     >
       <div className="flex items-center justify-center min-h-screen bg-black bg-opacity-50">
@@ -27,8 +28,8 @@ export default function Home() {
           <p className="text-center text-white mb-6 dark:text-gray-800">
             Where you can choose gifts for others
           </p>
-          {/* Google Login Button */}
-          <GoogleLoginButton /> {/* No need to pass onClick since handleLogin is inside the button */}
+    
+          <GoogleLoginButton /> 
         </div>
       </div>
     </div>

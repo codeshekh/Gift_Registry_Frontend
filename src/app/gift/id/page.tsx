@@ -1,12 +1,11 @@
+import React,{FC} from 'react'
 
-import { useState,FC } from "react"
-
-const Page: FC =()=>{
-return (
+const page:FC = () => {
+  return (
     <div>
-        <h1>Gift by Id</h1>
+      
     </div>
-)
+  )
 }
 
-export default Page;
+export default page

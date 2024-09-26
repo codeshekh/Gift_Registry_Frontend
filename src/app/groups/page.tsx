@@ -3,7 +3,8 @@
 import { useState } from 'react';
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
-import { Popover, PopoverTrigger, PopoverContent } from '@radix-ui/react-popover'; // Radix UI popover imports
+import { Popover, PopoverTrigger, PopoverContent } from '@radix-ui/react-popover';
+import GroupCard from '@/components/ui/GroupCard'; // Make sure to adjust the import path
 
 const CreateGroupPage = () => {
   const [groupName, setGroupName] = useState('');
@@ -49,20 +50,38 @@ const CreateGroupPage = () => {
     }
   };
 
+  const handleAddPeople = (groupId: number) => {
+    // Logic to add people to the group
+    console.log(`Add people to group with ID: ${groupId}`);
+  };
+
+  const handleDeleteGroup = (groupId: number) => {
+    // Logic to delete the group
+    console.log(`Delete group with ID: ${groupId}`);
+    setGroups(groups.filter(group => group.id !== groupId)); // Remove the group from the state
+  };
+
   return (
     <div className="p-6 bg-gray-100 min-h-screen">
       <h1 className="text-2xl font-bold mb-4">Groups</h1>
 
       {/* Centered Create Group Button with Popover */}
-      <div className="flex justify-center mb-9"> {/* Updated this line */}
+      <div className="flex justify-center mb-9 relative z-50">
         <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
           <PopoverTrigger asChild>
-            <button className="py-2 px-4 bg-indigo-600 text-white rounded-md">
+            <button 
+              onClick={() => setIsPopoverOpen(true)}
+              className="py-2 px-4 bg-indigo-600 text-white rounded-md">
               Create Group
             </button>
           </PopoverTrigger>
 
-          <PopoverContent className="p-6 bg-white shadow-lg rounded-lg max-w-md w-full">
+          <PopoverContent
+            side="top"
+            align="center"
+            sideOffset={10}  
+            className="p-6 bg-white shadow-lg rounded-lg max-w-md w-full z-50"  
+          >
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label htmlFor="groupName" className="block text-sm font-medium text-gray-700">
@@ -118,14 +137,16 @@ const CreateGroupPage = () => {
       </div>
 
       {/* Group Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-9">
         {groups.length > 0 ? (
           groups.map((group) => (
-            <div key={group.id} className="bg-white shadow-md rounded-lg p-4">
-              <h3 className="text-lg font-semibold">{group.groupName}</h3>
-              <p className="text-gray-600">{group.description}</p>
-              <p className="text-sm text-gray-500">Members: {group.members.join(', ')}</p>
-            </div>
+            <GroupCard
+              key={group.id}
+              groupName={group.groupName}
+              memberCount={group.members.length}
+              onAddPeople={() => handleAddPeople(group.id)}
+              onDeleteGroup={() => handleDeleteGroup(group.id)}
+            />
           ))
         ) : (
           <p>No groups available.</p>

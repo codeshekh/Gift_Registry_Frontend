@@ -16,13 +16,17 @@ const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({ onClick }) => {
   };
 
   return (
-    <button
-      onClick={handleLogin} // Call handleLogin when the button is clicked
-      className="w-full bg-black text-white py-2 px-4 rounded-lg hover:bg-gray-800 flex items-center justify-center"
-    >
-      <FaGoogle size={20} className="inline-block mr-2" />
-      Login with Google
-    </button>
+    <div className='relative overflow-hidden rounded-lg'>
+      <div className='absolute inset-0 bg-cover bg-center blur-md' style={{ backgroundImage: "url('signup.jpg')" }} />
+      <button
+        onClick={handleLogin} 
+        className="relative z-10 w-full text-white py-2 px-4 rounded-lg flex items-center justify-center transition duration-300 hover:shadow-lg"
+        style={{ backdropFilter: 'blur(5px)' }}
+      >
+        <FaGoogle size={20} className="inline-block mr-2" />
+        Sign in with Google
+      </button>
+    </div>
   );
 };
 

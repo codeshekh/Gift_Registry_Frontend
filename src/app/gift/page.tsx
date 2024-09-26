@@ -1,55 +1,88 @@
 "use client";
 
-import { useState, FC } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect, FC } from "react";
+
+interface Gift {
+  id: number;
+  giftName: string;
+  giftUrl: string;
+  registryId: number;
+}
 
 const GiftPage: FC = () => {
   const [name, setName] = useState("");
-  const [url, setUrl] = useState("");  
+  const [url, setUrl] = useState("");
   const [registryId, setRegistryId] = useState<number | undefined>(undefined);
+  const [gifts, setGifts] = useState<Gift[]>([]); // Empty initially
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const router = useRouter();
 
+  // Fetch gifts by registryId from the backend
+  const fetchGifts = async (registryId: number | undefined) => {
+    if (!registryId) return;
+    try {
+      const response = await fetch(`http://localhost:4000/gifts/registry/${registryId}`);
+      if (response.ok) {
+        const data = await response.json();
+        setGifts(data); // Update state with fetched gifts
+      } else {
+        setError("Failed to fetch gifts");
+      }
+    } catch (err) {
+      setError("An error occurred while fetching gifts");
+    }
+  };
 
+  useEffect(() => {
+    // Fetch gifts only if a valid registryId is provided
+    if (registryId) {
+      fetchGifts(registryId);
+    }
+  }, [registryId]);
 
-  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError("");
-  
+
     // Input validation
     if (!name || !url || !registryId) {
       setError("All fields are required");
       setLoading(false);
       return;
     }
-  
+
+    // Create new gift object
+    const newGift = {
+      giftName: name,
+      giftUrl: url,
+      registryId,
+    };
+
     try {
       const response = await fetch("http://localhost:4000/gifts", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        // Sending giftName instead of name
-        body: JSON.stringify({ giftName: name, giftUrl: url, registryId }), 
+        body: JSON.stringify(newGift),
       });
-  
+
       if (response.ok) {
-        router.push("/gifts");
+        const createdGift = await response.json();
+        setGifts((prevGifts) => [...prevGifts, createdGift]); // Add the new gift to the gift list
+        setName("");
+        setUrl("");
+        setRegistryId(undefined);
       } else {
-        const data = await response.json();
-        setError(data.message || "Something went wrong");
+        setError("Failed to create gift");
       }
-    } catch (error) {
-      setError("Failed to submit the form");
+    } catch (err) {
+      setError("An error occurred while creating the gift");
     } finally {
       setLoading(false);
     }
   };
-
-
 
   return (
     <div>
@@ -92,12 +125,26 @@ const GiftPage: FC = () => {
           </div>
           <button
             type="submit"
-            className={`px-4 py-2 text-white rounded ${loading ? 'bg-gray-500' : 'bg-blue-500'}`}
+            className={`px-4 py-2 text-white rounded ${loading ? "bg-gray-500" : "bg-blue-500"}`}
             disabled={loading}
           >
             {loading ? "Creating..." : "Create Gift"}
           </button>
         </form>
+
+        {/* Displaying gifts in card format */}
+        <h2 className="text-lg font-semibold mt-8">Available Gifts</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-4">
+          {gifts.map((gift) => (
+            <div key={gift.id} className="bg-white p-4 rounded-lg shadow-lg border">
+              <h3 className="text-xl font-semibold">{gift.giftName}</h3>
+              <a href={gift.giftUrl} target="_blank" rel="noopener noreferrer" className="text-blue-500 mt-2 block">
+                View Gift
+              </a>
+              <p className="mt-2 text-sm">Registry ID: {gift.registryId}</p>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );

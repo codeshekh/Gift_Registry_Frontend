@@ -2,9 +2,8 @@
 
 import { useState, FC } from 'react';
 import { Popover, PopoverTrigger, PopoverContent } from '@radix-ui/react-popover';
-import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable'; // Custom resizable components
-import Gift from '../gift/page'; // Ensure the correct path for the Gift component
-import GiftDetails from '../gift/id/page'; // Ensure the correct path for the GiftDetails component
+import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable'; 
+import Gift from '../gift/page';
 
 const Page: FC = () => {
   const [name, setName] = useState('');
@@ -31,6 +30,7 @@ const Page: FC = () => {
 
     try {
       const response = await fetch('http://localhost:4000/registries', {
+        
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -40,6 +40,7 @@ const Page: FC = () => {
 
       if (response.ok) {
         const data = await response.json();
+        console.log(data);
         setRegistries([...registries, { id: data.id, name, userId, eventId }]);
         setIsPopoverOpen(false); // Close popover on success
       } else {
@@ -147,10 +148,7 @@ const Page: FC = () => {
           {/* Resizable Handle */}
           <ResizableHandle className="bg-gray-400" withHandle />
 
-          {/* Right Panel (Gift Details Section) */}
-          <ResizablePanel className="flex flex-1 bg-white p-6">
-            <GiftDetails />
-          </ResizablePanel>
+      
         </ResizablePanelGroup>
       </div>
     </div>
