@@ -1,11 +1,11 @@
 'use client';
 
 import { useState, FC } from 'react';
-import { Card, CardHeader, CardContent, CardTitle, CardDescription } from '@/components/ui/card'; // Import Card components from Shadcn
-import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover'; // Ensure correct Popover import
+import { Card, CardHeader, CardContent, CardTitle, CardDescription } from '@/components/ui/card'; 
+import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover'; 
 
-const Page: FC = () => {
-  // State for events
+const EventPage: FC = () => {
+  
   const [events, setEvents] = useState([
     {
       id: 1,
@@ -33,8 +33,9 @@ const Page: FC = () => {
     },
   ]);
 
-  // State for popover visibility
+  
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
+  const [message, setMessage] = useState('');
 
   interface CreateEventPopoverProps {
     onClose: () => void;
@@ -64,17 +65,17 @@ const Page: FC = () => {
 
     const handleSubmit = (e: React.FormEvent) => {
       e.preventDefault();
-      // Create a new event object
+      
       const newEvent = {
-        id: events.length + 1, // Increment the ID based on the current events length
+        id: events.length + 1, 
         ...eventData,
       };
 
-      // Update the events state with the new event
+      
       setEvents((prevEvents) => [...prevEvents, newEvent]);
 
-      alert('Event created successfully');
-      onClose(); // Close the popover on successful submission
+      setMessage('Event created successfully');
+      onClose(); 
     };
 
     return (
@@ -151,6 +152,10 @@ const Page: FC = () => {
     );
   };
 
+  const handleDeleteEvent = (eventId: number) => {
+    setEvents(events.filter(event => event.id !== eventId));
+  };
+
   return (
     <div className="flex flex-col min-h-screen justify-between">
       <div>
@@ -183,6 +188,12 @@ const Page: FC = () => {
                 <CardContent>
                   <p className="text-sm text-gray-500">Organizers: {event.organizers.join(', ')}</p>
                   <p className="text-sm text-gray-500">Members: {event.members.join(', ')}</p>
+                  <button
+                    className="mt-4 py-1 px-3 bg-red-600 text-white rounded-md hover:bg-red-700"
+                    onClick={() => handleDeleteEvent(event.id)}
+                  >
+                    Delete Event
+                  </button>
                 </CardContent>
               </Card>
             ))
@@ -191,8 +202,15 @@ const Page: FC = () => {
           )}
         </div>
       </div>
+
+      {/* Success/Error Message */}
+      {message && (
+        <div className="mt-4 p-4 bg-green-100 border border-green-300 text-green-700 rounded-md">
+          {message}
+        </div>
+      )}
     </div>
   );
 };
 
-export default Page;
+export default EventPage;
