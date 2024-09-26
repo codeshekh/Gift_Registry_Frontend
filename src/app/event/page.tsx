@@ -19,7 +19,7 @@ const EventPage: FC = () => {
       id: 2,
       userId: 2,
       eventName: 'Music Festival',
-      description: 'A festival featuring various artists.',
+      description: 'A festival featuring various artist.',
       organizers: [3],
       members: [1, 2, 5],
     },
