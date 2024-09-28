@@ -17,7 +17,7 @@ export default function Home() {
     <div 
       className="relative min-h-screen bg-cover bg-center" 
       style={{
-        backgroundImage: "url('/signup.jpg')" // Update with your actual background image path
+        backgroundImage: "url('/signup.jpg')" 
       }}
     >
       <div className="flex items-center justify-center min-h-screen bg-black bg-opacity-50">

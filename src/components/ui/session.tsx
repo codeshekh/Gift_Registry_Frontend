@@ -4,9 +4,9 @@ import { useRouter, useSearchParams } from "next/navigation"; // Ensure you are 
 
 interface CustomSession {
   user?: {
-    image?: string;
-    username?: string;
-    email?: string;
+    username: string;
+    email: string;
+    profilePic: string;
   };
 }
 
