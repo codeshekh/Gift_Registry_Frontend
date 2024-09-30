@@ -1,32 +1,32 @@
 "use client";
 import { useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation"; // Ensure you are using the correct import
+import { useRouter, useSearchParams } from "next/navigation"; 
 
 interface CustomSession {
   user?: {
+    userId : number;
     username: string;
     email: string;
-    profilePic: string;
+    profilePic : string;
   };
 }
 
 export const useSession = (): CustomSession | null => {
   const [session, setSession] = useState<CustomSession | null>(null);
-  const router = useRouter();
-  const searchParams = useSearchParams(); // Use useSearchParams hook
+  const searchParams = useSearchParams(); 
 
   useEffect(() => {
-    const userParam = searchParams.get('user'); // Get the 'user' parameter
-
-    if (userParam) { // Check if the 'user' parameter exists
+    const userParam = searchParams.get('user'); 
+    
+    if (userParam) {
       try {
         const user = JSON.parse(decodeURIComponent(userParam));
-        setSession({ user }); // Set session with user data from query
+        setSession({ user });
       } catch (error) {
         console.error("Error parsing user data:", error);
       }
     }
   }, [searchParams]);
-
+  
   return session;
 };

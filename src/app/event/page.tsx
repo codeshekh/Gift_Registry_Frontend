@@ -1,21 +1,26 @@
 'use client';
 
-import { useState, FC } from 'react';
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import  Input  from "@/components/ui/input";
-import  Button  from "@/components/ui/button";
+import  {Button}  from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { PlusIcon, TrashIcon } from 'lucide-react';
+import { PlusIcon, TrashIcon, UserPlusIcon } from 'lucide-react';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
+import  Textarea  from "@/components/ui/textarea";
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
-const EventPage: FC = () => {
-  const [events, setEvents] = useState<{
-    id: number;
-    organizers: string[];
-    eventName: string;
-    description: string;
-    members: string[];
-  }[]>([
+interface Event {
+  id: number;
+  organizers: string[];
+  eventName: string;
+  description: string;
+  members: string[];
+}
+
+export default function EventPage() {
+  const [events, setEvents] = useState<Event[]>([
     {
       id: 1,
       organizers: ['organizer1@example.com', 'organizer2@example.com'],
@@ -39,16 +44,11 @@ const EventPage: FC = () => {
     },
   ]);
 
-  const [isPopoverOpen, setIsPopoverOpen] = useState(false);
-  const [isAddMemberPopoverOpen, setIsAddMemberPopoverOpen] = useState(false);
+  const [isCreateEventOpen, setIsCreateEventOpen] = useState(false);
+  const [isAddMemberOpen, setIsAddMemberOpen] = useState(false);
   const [currentEventId, setCurrentEventId] = useState<number | null>(null);
-  const [message, setMessage] = useState('');
 
-  interface CreateEventPopoverProps {
-    onClose: () => void;
-  }
-
-  const CreateEventPopover: FC<CreateEventPopoverProps> = ({ onClose }) => {
+  const CreateEventPopover = ({ onClose }: { onClose: () => void }) => {
     const [eventData, setEventData] = useState({
       eventName: '',
       description: '',
@@ -76,12 +76,12 @@ const EventPage: FC = () => {
         ...eventData,
       };
       setEvents((prevEvents) => [...prevEvents, newEvent]);
-      setMessage('Event created successfully');
+      toast.success('Event created successfully');
       onClose();
     };
 
     return (
-      <PopoverContent className="p-6 bg-white shadow-lg rounded-lg">
+      <PopoverContent className="w-80">
         <form onSubmit={handleSubmit} className="space-y-4">
           <Input
             type="text"
@@ -90,8 +90,7 @@ const EventPage: FC = () => {
             value={eventData.eventName}
             onChange={handleChange}
           />
-          <Input
-            alt="textarea"
+          <Textarea
             name="description"
             placeholder="Description"
             value={eventData.description}
@@ -111,18 +110,16 @@ const EventPage: FC = () => {
             value={eventData.members.join(', ')}
             onChange={handleArrayChange}
           />
-          <Button type="submit">
-            Create Event
-          </Button>
+          <div className="flex justify-end space-x-2">
+            <Button type="submit">Create Event</Button>
+            <Button variant="outline" onClick={onClose}>Cancel</Button>
+          </div>
         </form>
-        <Button variant="destructive" onClick={onClose}>
-          Close
-        </Button>
       </PopoverContent>
     );
   };
 
-  const AddMemberPopover: FC<CreateEventPopoverProps> = ({ onClose }) => {
+  const AddMemberPopover = ({ onClose }: { onClose: () => void }) => {
     const [email, setEmail] = useState('');
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -133,14 +130,14 @@ const EventPage: FC = () => {
             event.id === currentEventId ? { ...event, members: [...event.members, email.trim()] } : event
           )
         );
-        setMessage('Member added successfully');
+        toast.success('Member added successfully');
         setEmail('');
         onClose();
       }
     };
 
     return (
-      <PopoverContent className="p-6 bg-white shadow-lg rounded-lg">
+      <PopoverContent className="w-80">
         <form onSubmit={handleSubmit} className="space-y-4">
           <Input
             type="email"
@@ -148,96 +145,93 @@ const EventPage: FC = () => {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
-          <Button type="submit">Add Member</Button>
+          <div className="flex justify-end space-x-2">
+            <Button type="submit">Add Member</Button>
+            <Button variant="outline" onClick={onClose}>Cancel</Button>
+          </div>
         </form>
-        <Button variant="destructive" onClick={onClose}>
-          Close
-        </Button>
       </PopoverContent>
     );
   };
 
   const handleDeleteEvent = (eventId: number) => {
     setEvents(events.filter((event) => event.id !== eventId));
-  };
-
-  const handleRegisterEvent = (eventId: number) => {
-    setMessage(`Registered for event with ID: ${eventId}`);
+    toast.info('Event deleted');
   };
 
   return (
-    <Card className="flex flex-col min-h-screen justify-between">
-      <CardContent className="mt-2">
-        <div className="flex justify-between mb-4">
-          <Button onClick={() => setIsPopoverOpen(true)}>
-            <PlusIcon className="h-4 w-4 mr-2" /> Create Event
-          </Button>
-        </div>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Event Name</TableHead>
-              <TableHead>Description</TableHead>
-              <TableHead>Organizers</TableHead>
-              <TableHead>Members</TableHead>
-              <TableHead className="w-[100px]">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {events.length > 0 ? (
-              events.map((event) => (
-                <TableRow key={event.id}>
-                  <TableCell>{event.eventName}</TableCell>
-                  <TableCell>{event.description}</TableCell>
-                  <TableCell>{event.organizers.join(', ')}</TableCell>
-                  <TableCell>{event.members.join(', ')}</TableCell>
-                  <TableCell>
-                    <div className="flex space-x-2">
-                      <Button
-                        onClick={() => {
-                          setCurrentEventId(event.id);
-                          setIsAddMemberPopoverOpen(true);
-                        }}
-                      >
-                        Add Member
-                      </Button>
-                      <Button variant="destructive" onClick={() => handleDeleteEvent(event.id)}>
-                        <TrashIcon className="h-4 w-4" />
-                        <span className="sr-only">Delete</span>
-                      </Button>
-                    </div>
-                  </TableCell>
+    <div className="container mx-auto p-4">
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-2xl font-bold">Event Manager</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex justify-between mb-4">
+            <Popover open={isCreateEventOpen} onOpenChange={setIsCreateEventOpen}>
+              <PopoverTrigger asChild>
+                <Button>
+                  <PlusIcon className="h-4 w-4 mr-2" /> Create Event
+                </Button>
+              </PopoverTrigger>
+              <CreateEventPopover onClose={() => setIsCreateEventOpen(false)} />
+            </Popover>
+          </div>
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Event Name</TableHead>
+                  <TableHead>Description</TableHead>
+                  <TableHead>Organizers</TableHead>
+                  <TableHead>Members</TableHead>
+                  <TableHead className="w-[100px]">Actions</TableHead>
                 </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell colSpan={5} className="text-center">
-                  No events available.
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </CardContent>
-
-      {/* Popover for creating events */}
-      <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
-        <CreateEventPopover onClose={() => setIsPopoverOpen(false)} />
-      </Popover>
-
-      {/* Popover for adding members */}
-      <Popover open={isAddMemberPopoverOpen} onOpenChange={setIsAddMemberPopoverOpen}>
-        <AddMemberPopover onClose={() => setIsAddMemberPopoverOpen(false)} />
-      </Popover>
-
-      {/* Message Display */}
-      {message && (
-        <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-green-500 text-white py-2 px-4 rounded-md">
-          {message}
-        </div>
-      )}
-    </Card>
+              </TableHeader>
+              <TableBody>
+                {events.length > 0 ? (
+                  events.map((event) => (
+                    <TableRow key={event.id}>
+                      <TableCell>{event.eventName}</TableCell>
+                      <TableCell>{event.description}</TableCell>
+                      <TableCell>{event.organizers.join(', ')}</TableCell>
+                      <TableCell>{event.members.join(', ')}</TableCell>
+                      <TableCell>
+                        <div className="flex space-x-2">
+                          <Popover open={isAddMemberOpen} onOpenChange={setIsAddMemberOpen}>
+                            <PopoverTrigger asChild>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => {
+                                  setCurrentEventId(event.id);
+                                  setIsAddMemberOpen(true);
+                                }}
+                              >
+                                <UserPlusIcon className="h-4 w-4" />
+                              </Button>
+                            </PopoverTrigger>
+                            <AddMemberPopover onClose={() => setIsAddMemberOpen(false)} />
+                          </Popover>
+                          <Button size="sm" variant="destructive" onClick={() => handleDeleteEvent(event.id)}>
+                            <TrashIcon className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={5} className="text-center">
+                      No events available.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
+      <ToastContainer position="bottom-right" autoClose={3000} />
+    </div>
   );
-};
-
-export default EventPage;
+}

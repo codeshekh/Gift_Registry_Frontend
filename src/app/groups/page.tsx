@@ -1,209 +1,264 @@
-'use client';
+"use client"
+import { useEffect, useState } from 'react'
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import Input from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
+import { Label } from "@/components/ui/label"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import Textarea from "@/components/ui/textarea"
+import { PlusIcon, UsersIcon, Trash2Icon, SearchIcon, UserPlusIcon, XIcon } from 'lucide-react'
+import { toast, ToastContainer } from 'react-toastify'
+import 'react-toastify/dist/ReactToastify.css'
+import GroupCard from '@/components/ui/GroupCard'
+import { useSession } from '@/context/SessionContext'
 
-import { useState } from 'react';
-import axios from 'axios';
-import { useRouter } from 'next/navigation';
-import { Popover, PopoverTrigger, PopoverContent } from '@radix-ui/react-popover';
-import { Card, CardContent } from "@/components/ui/card";
-import Input from "@/components/ui/input";
-import Button from "@/components/ui/button";
-import { Label } from "@/components/ui/label"; // Ensure this import is correct
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { PlusIcon, UsersIcon, TrashIcon } from 'lucide-react'; // Import TrashIcon
+interface Member {
+  id: number
+  username: string
+  email: string
+}
 
-const CreateGroupPage = () => {
-  const [groupName, setGroupName] = useState('');
-  const [description, setDescription] = useState('');
-  const [userId] = useState(1);
-  const [additionalUserIds, setAdditionalUserIds] = useState('');
-  const [groupImage, setGroupImage] = useState<File | null>(null);
-  const [message, setMessage] = useState('');
-  const [groups, setGroups] = useState([
-    { id: 1, groupName: 'Default Group 1', description: 'This is a default group', members: [1, 2, 3] },
-    { id: 2, groupName: 'Default Group 2', description: 'This is another default group', members: [1, 4, 5] },
-  ]);
-  const [isPopoverOpen, setIsPopoverOpen] = useState(false);
-  const [userToAdd, setUserToAdd] = useState(''); // State to hold user ID to add
+interface Group {
+  id: number
+  groupName: string
+  description: string
+  members: Member[]
+}
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0] || null;
-    setGroupImage(file);
-  };
+interface NewGroup {
+  groupOwnerId: number
+  groupName: string
+  description: string
+  memberIds: number[]
+}
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+export default function GroupPage() {
+  const [groups, setGroups] = useState<Group[]>([])
+  const [searchTerm, setSearchTerm] = useState('')
+  const [newGroup, setNewGroup] = useState<NewGroup>({
+    groupOwnerId: 0,
+    groupName: '',
+    description: '',
+    memberIds: []
+  })
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
+  const [users, setUsers] = useState<{ id: number; username: string }[]>([])
 
-    const userIdArray = additionalUserIds.split(',').map(Number);
+  const session = useSession()
+  const userId = session?.user?.id
 
-    const formData = new FormData();
-    if (groupImage) formData.append('groupImage', groupImage as Blob);
-    formData.append('createGroupDto', JSON.stringify({
-      userId,
-      groupName,
-      description,
-    }));
-    formData.append('userId', JSON.stringify([userId, ...userIdArray]));
-
+  const fetchGroupsByUserId = async (userId: number) => {
     try {
-      const response = await axios.post('http://localhost:4000/groups', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
-
-      if (response.data.data) {
-        setMessage('Group created successfully');
-        setGroups([...groups, { id: response.data.data, groupName, description, members: [userId, ...userIdArray] }]);
-        setIsPopoverOpen(false);
-        setGroupName('');
-        setDescription('');
-        setAdditionalUserIds('');
-        setGroupImage(null);
-      } else {
-        setMessage('Failed to create group. Please try again.');
+      const response = await fetch(`http://localhost:4000/v1/groups/user/${userId}`)
+      if (!response.ok) {
+        throw new Error('Failed to fetch groups')
       }
+      const data = await response.json()
+      setGroups(data)
     } catch (error) {
-      console.error('Error creating group:', error);
-      setMessage('Error creating group');
+      const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred'
+      toast.error(errorMessage)
+      console.error('Fetch error:', error)
     }
-  };
+  }
 
-  const handleDeleteGroup = (groupId: number) => {
-    console.log(`Delete group with ID: ${groupId}`);
-    setGroups(groups.filter(group => group.id !== groupId));
-  };
+  useEffect(() => {
+    if (userId) {
+      console.log('Fetching groups for user ID:', userId)
+      fetchGroupsByUserId(userId)
+    } else {
+      console.warn('User ID is not defined. Please ensure the session is loaded.')
+    }
+  }, [userId])
 
-  const handleAddUserToGroup = (groupId: number) => {
-    if (!userToAdd) return;
-
-    setGroups(groups.map(group => {
-      if (group.id === groupId) {
-        // Add user to the members array
-        const updatedMembers = [...group.members, Number(userToAdd)];
-        return { ...group, members: updatedMembers };
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const response = await fetch('http://localhost:4000/users')
+        const data = await response.json()
+        setUsers(data)
+      } catch (error) {
+        console.error('Error fetching users:', error)
       }
-      return group;
-    }));
-    
-    setUserToAdd(''); // Reset input after adding
-  };
+    }
+    fetchUsers()
+  }, [])
+
+  const handleCreateGroup = async (e: React.FormEvent) => {
+    e.preventDefault()
+    try {
+      const response = await fetch('http://localhost:4000/v1/groups', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...newGroup,
+          groupOwnerId: userId
+        }),
+      })
+      if (!response.ok) {
+        throw new Error('Failed to create group')
+      }
+      const newGroupData = await response.json()
+      setGroups([...groups, newGroupData])
+      setIsCreateDialogOpen(false)
+      setNewGroup({
+        groupOwnerId: 0,
+        groupName: '',
+        description: '',
+        memberIds: []
+      })
+      toast.success('Group created successfully')
+    } catch (error: unknown) {
+      const errorMessage = (error instanceof Error) ? error.message : 'An unexpected error occurred'
+      toast.error(errorMessage)
+    }
+  }
+
+  const handleDeleteGroup = async (groupId: number) => {
+    try {
+      const response = await fetch(`http://localhost:4000/v1/groups/${groupId}`, {
+        method: 'DELETE',
+      })
+      if (!response.ok) {
+        throw new Error('Failed to delete group')
+      }
+      setGroups((prevGroups) => prevGroups.filter(group => group.id !== groupId))
+      toast.success('Group deleted successfully')
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred'
+      toast.error(errorMessage)
+      console.error('Deletion error:', error)
+    }
+  }
+
+  const filteredGroups = Array.isArray(groups)
+    ? groups.filter(group => {
+        const groupNameMatches = group.groupName && group.groupName.toLowerCase().includes(searchTerm.toLowerCase())
+        const descriptionMatches = group.description && group.description.toLowerCase().includes(searchTerm.toLowerCase())
+        return groupNameMatches || descriptionMatches
+      })
+    : []
+
+  const handleMemberSelection = (value: string) => {
+    const numericValue = parseInt(value, 10)
+    if (!isNaN(numericValue) && !newGroup.memberIds.includes(numericValue)) {
+      setNewGroup(prev => ({
+        ...prev,
+        memberIds: [...prev.memberIds, numericValue]
+      }))
+    }
+  }
+
+  const handleRemoveMember = (memberId: number) => {
+    setNewGroup(prev => ({
+      ...prev,
+      memberIds: prev.memberIds.filter(id => id !== memberId)
+    }))
+  }
 
   return (
-    <div className="p-6 bg-gray-100 min-h-screen">
-      <h1 className="text-2xl font-bold mb-4">Groups</h1>
+    <div className="container mx-auto p-4 space-y-8">
+      <h1 className="text-4xl font-bold">Group Management</h1>
 
-      <div className="flex justify-center mb-9 relative z-50">
-        <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
-          <PopoverTrigger asChild>
-            <button 
-              onClick={() => setIsPopoverOpen(true)}
-              className="py-2 px-4 bg-indigo-600 text-white rounded-md flex items-center">
-              <PlusIcon className="h-4 w-4" />
-            </button>
-          </PopoverTrigger>
+      <div className="flex justify-between items-center">
+        <div className="relative w-64">
+          <Input
+            type="text"
+            placeholder="Search groups..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10"
+          />
+          <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+        </div>
 
-          <PopoverContent
-            side="top"
-            align="center"
-            sideOffset={10}
-            className="p-6 bg-white shadow-lg rounded-lg max-w-md w-full z-50"
-          >
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
+        <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+          <DialogTrigger asChild>
+            <Button>
+              <PlusIcon className="h-4 w-4 mr-2" /> Create Group
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>Create New Group</DialogTitle>
+            </DialogHeader>
+            <form onSubmit={handleCreateGroup} className="space-y-4">
+              <div className="space-y-2">
                 <Label htmlFor="groupName">Group Name</Label>
                 <Input
                   id="groupName"
-                  value={groupName}
-                  onChange={(e) => setGroupName(e.target.value)}
+                  value={newGroup.groupName}
+                  onChange={(e) => setNewGroup({ ...newGroup, groupName: e.target.value })}
                   placeholder="Enter group name"
-                  required
                 />
               </div>
-              <div>
+              <div className="space-y-2">
                 <Label htmlFor="description">Description</Label>
-                <Input
+                <Textarea
                   id="description"
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Enter description"
-                  required
+                  value={newGroup.description}
+                  onChange={(e) => setNewGroup({ ...newGroup, description: e.target.value })}
+                  placeholder="Enter group description"
                 />
               </div>
-              <div>
-                <Label htmlFor="additionalUserIds">Additional User IDs (comma-separated)</Label>
-                <Input
-                  id="additionalUserIds"
-                  value={additionalUserIds}
-                  onChange={(e) => setAdditionalUserIds(e.target.value)}
-                  placeholder="Enter additional user IDs"
-                  required
-                />
+              <div className="space-y-2">
+                <Label htmlFor="members">Select Members</Label>
+                <Select onValueChange={handleMemberSelection}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select members" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {users.map((user) => (
+                      <SelectItem key={user.id} value={user.id.toString()}>
+                        {user.username}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
-              <div>
-                <Label htmlFor="groupImage">Group Picture</Label>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageChange}
-                  className="mt-1 border border-gray-300 rounded-md"
-                />
+              <div className="flex flex-wrap gap-2">
+                {newGroup.memberIds.map((memberId) => {
+                  const user = users.find(u => u.id === memberId)
+                  return user ? (
+                    <div key={memberId} className="bg-primary text-primary-foreground px-2 py-1 rounded-full text-sm flex items-center">
+                      {user.username}
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveMember(memberId)}
+                        className="ml-2 focus:outline-none"
+                      >
+                        <XIcon className="h-4 w-4" />
+                      </button>
+                    </div>
+                  ) : null
+                })}
               </div>
-              <Button type="submit" className="w-full">
-                <PlusIcon className="h-4 w-4 mr-2" />
-              </Button>
+              <Button type="submit">Create Group</Button>
             </form>
-          </PopoverContent>
-        </Popover>
+          </DialogContent>
+        </Dialog>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-9">
-        {groups.length > 0 ? (
-          groups.map((group) => (
-            <Card key={group.id} className="flex flex-col">
-              <CardContent className="p-4 flex items-center space-x-4">
-                <Avatar className="h-12 w-12">
-                  <AvatarImage src={`/placeholder.svg?height=48&width=48&text=${group.groupName.charAt(0)}`} alt={group.groupName} />
-                  <AvatarFallback>{group.groupName.charAt(0)}</AvatarFallback>
-                </Avatar>
-                <div className="flex-grow">
-                  <h4 className="text-lg font-semibold">{group.groupName}</h4>
-                  <p className="text-sm text-muted-foreground">{group.description}</p>
-                </div>
-                <div className="flex items-center text-sm text-muted-foreground">
-                  <UsersIcon className="h-4 w-4 mr-1" />
-                  {group.members.length} members
-                </div>
-              </CardContent>
-              <div className="flex justify-between space-x-2 p-2">
-                <div className="flex items-center space-x-2">
-                  <Input
-                    value={userToAdd}
-                    onChange={(e) => setUserToAdd(e.target.value)}
-                    placeholder="User ID"
-                    className="w-24"
-                  />
-                  <Button onClick={() => handleAddUserToGroup(group.id)}>
-                    <PlusIcon className="h-4 w-4" />
-                  </Button>
-                </div>
-                <Button variant="destructive" onClick={() => handleDeleteGroup(group.id)}>
-                  <TrashIcon className="h-4 w-4" />
-                </Button>
-              </div>
-            </Card>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {filteredGroups.length > 0 ? (
+          filteredGroups.map((group) => (
+            <GroupCard
+              key={group.id}
+              groupName={group.groupName}
+              memberCount={group.members.length}
+              onAddPeople={() => console.log(`Add people to ${group.groupName}`)}
+              onDeleteGroup={() => handleDeleteGroup(group.id)}
+            />
           ))
         ) : (
-          <p>No groups available.</p>
+          <div className="col-span-full text-center text-gray-500">No groups found</div>
         )}
       </div>
-
-      {message && (
-        <div className="mt-4 p-4 bg-green-100 border border-green-300 text-green-700 rounded-md">
-          {message}
-        </div>
-      )}
+      <ToastContainer />
     </div>
-  );
-};
-
-export default CreateGroupPage;
+  )
+}

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import Button from "@/components/ui/button"; // Use default import
+import {Button} from "@/components/ui/button"; // Use default import
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { UserPlus, Trash2 } from "lucide-react";
 import * as Popover from "@radix-ui/react-popover";
