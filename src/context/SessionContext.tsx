@@ -32,6 +32,10 @@ export const SessionProvider = ({ children }: SessionProviderProps) => {
       try {
         const user = JSON.parse(decodeURIComponent(userParam));
         setSession({ user });
+if(user.id){
+  localStorage.setItem('userId',user.id.toString());
+}
+
       } catch (error) {
         console.error('Error parsing user data:', error);
       }

@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import {Button} from "@/components/ui/button"; // Use default import
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button"; 
 import { UserPlus, Trash2 } from "lucide-react";
 import * as Popover from "@radix-ui/react-popover";
 
@@ -29,11 +28,7 @@ export default function GroupCard({
           onMouseLeave={() => setIsHovered(false)}
         >
           <CardHeader className="relative pb-0">
-            <Avatar className="w-full h-48 rounded-t-lg">
-              <AvatarImage src="/onepiece.png?height=192&width=384" alt={groupName} className="object-cover" />
-              <AvatarFallback>{groupName.slice(0, 2).toUpperCase()}</AvatarFallback>
-            </Avatar>
-            <CardTitle className="absolute bottom-2 left-4 text-white text-2xl font-bold drop-shadow-lg">
+            <CardTitle className="text-2xl font-bold">
               {groupName}
             </CardTitle>
           </CardHeader>
@@ -62,8 +57,8 @@ export default function GroupCard({
       <Popover.Portal>
         <Popover.Content
           align="center"
-          side="top" // To make it appear above the card
-          sideOffset={10} // Adjust the offset to move it slightly above the card
+          side="top"
+          sideOffset={10}
           className="p-4 bg-white rounded-md shadow-md border"
         >
           <h3 className="text-lg font-semibold">{groupName}</h3>
