@@ -29,4 +29,5 @@ export const useSession = (): CustomSession | null => {
   }, [searchParams]);
   
   return session;
+
 };

@@ -12,12 +12,18 @@ const pathname = usePathname();
 const isSignup = pathname ==='/'
   return (
     <SessionProvider>
+
     <html lang="en">
-      <body className="bg-white">
+
+      <body className="bg-white ">
         
-        {!isSignup &&  <Navbar /> }
-        <main>{children}</main>
-        {!isSignup && <Footer/>}
+        {!isSignup && 
+           <Navbar />
+          }
+
+        <main className="flex-grow">{children}</main>
+
+        {!isSignup &&(<div  className='fixed bottom-0 w-full'> <Footer/>   </div>  )}
     
       </body>
     </html>

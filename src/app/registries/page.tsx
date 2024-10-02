@@ -1,14 +1,16 @@
 "use client"
 import { useState, FC } from 'react';
 type ViewType = "registry" | "gift" | "details" | "edit" |"giftDetails"; // Add "edit" here
-
-
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Input from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { PlusIcon, GiftIcon, TrashIcon } from 'lucide-react';
+import { useSession } from '@/context/SessionContext';
+
+
+
 
 interface Registry {
   id: number;
@@ -41,7 +43,8 @@ const Page: FC = () => {
   const [selectedGift, setSelectedGift] = useState<Gift | null>(null);
 
 
-  const handleRegistrySubmit = async (e: React.FormEvent) => {
+
+  async function handleRegistrySubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
     setError('');
@@ -74,7 +77,7 @@ const Page: FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }
 
   const handleGiftSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

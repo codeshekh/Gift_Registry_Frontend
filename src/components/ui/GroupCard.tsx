@@ -6,16 +6,20 @@ import * as Popover from "@radix-ui/react-popover";
 
 interface GroupCardProps {
   groupName: string;
-  memberCount: number;
+  description: string;
+  members: { id: number, username: string }[];
   onAddPeople: () => void;
   onDeleteGroup: () => void;
+  group?: boolean; // Add this line if you need the group prop
 }
 
 export default function GroupCard({ 
   groupName = "My Group", 
-  memberCount = 0, 
+  description = "No description available",
+  members = [],
   onAddPeople = () => {}, 
-  onDeleteGroup = () => {} 
+  onDeleteGroup = () => {},
+  
 }: GroupCardProps) {
   const [isHovered, setIsHovered] = useState(false);
 
@@ -33,7 +37,15 @@ export default function GroupCard({
             </CardTitle>
           </CardHeader>
           <CardContent className="pt-4">
-            <p className="text-sm text-gray-500">{memberCount} members</p>
+            <p className="text-sm text-gray-500">{description}</p> {/* Show the description */}
+            <p className="mt-2 font-semibold">Members:</p>
+            <ul className="list-disc ml-5">
+              {members.map(member => (
+                <li key={member.id} className="text-sm text-gray-700">
+                  {member.username}
+                </li>
+              ))}
+            </ul>
           </CardContent>
           <CardFooter className="flex justify-between">
             <Button variant="outline" size="sm" onClick={onAddPeople}>
@@ -62,7 +74,14 @@ export default function GroupCard({
           className="p-4 bg-white rounded-md shadow-md border"
         >
           <h3 className="text-lg font-semibold">{groupName}</h3>
-          <p className="text-sm text-gray-500">{memberCount} members</p>
+          <p className="text-sm text-gray-500">{description}</p>
+          <ul className="list-disc ml-5 mt-2">
+            {members.map(member => (
+              <li key={member.id} className="text-sm text-gray-700">
+                {member.username}
+              </li>
+            ))}
+          </ul>
           <Popover.Arrow className="fill-white" />
         </Popover.Content>
       </Popover.Portal>

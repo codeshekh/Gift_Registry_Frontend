@@ -8,7 +8,6 @@ interface ProfileProps {
   email: string;
   profilePic?: string;
 }
-
 export default function ProfilePopover({ name, email, profilePic}: ProfileProps) {
   return (
     <Popover>
@@ -32,6 +31,7 @@ export default function ProfilePopover({ name, email, profilePic}: ProfileProps)
           </Avatar>
           <div>
             <h4 className="text-lg font-semibold">{name}</h4>
+      
             <p className="text-sm text-muted-foreground">{email}</p>
           </div>
         </div>
