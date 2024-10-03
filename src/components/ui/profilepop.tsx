@@ -4,6 +4,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { User } from "lucide-react";
 
 interface ProfileProps {
+
   name: string;
   email: string;
   profilePic?: string;
@@ -30,8 +31,8 @@ export default function ProfilePopover({ name, email, profilePic}: ProfileProps)
             </AvatarFallback>
           </Avatar>
           <div>
+            
             <h4 className="text-lg font-semibold">{name}</h4>
-      
             <p className="text-sm text-muted-foreground">{email}</p>
           </div>
         </div>

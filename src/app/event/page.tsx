@@ -23,8 +23,10 @@ interface Event {
 export default function EventPage() {
   const session = useSession();
   const userId = session?.user?.id;
+  
   const [events, setEvents] = useState<Event[]>([]);
   const [isCreateEventOpen, setIsCreateEventOpen] = useState(false);
+  const [editingEvent, setEditingEvent] = useState<Event | null>(null);
 
 useEffect(()=>{
   fetchEvents();
@@ -33,6 +35,7 @@ useEffect(()=>{
 const fetchEvents = async () => {
   try{
     const response = await fetch(`http://localhost:4000/v1/events/user/${userId}`);
+    console.log(response);
     if(!response.ok){
       throw new Error('Failed to fetch events');
     }
@@ -55,6 +58,7 @@ const fetchEvents = async () => {
       try {
         // Sending a POST request to the backend using Fetch
         const response = await fetch('http://localhost:4000/v1/events/', {
+          
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -67,14 +71,14 @@ const fetchEvents = async () => {
             userId,
           }),
         });
-
+console.log(response+"create");
         if (!response.ok) {
           throw new Error('Failed to create event');
         }
 
         const responseData = await response.json();
 
-        // const newEvent = { userId: responseData.data.userId,id:responseData.data.id,eventName:responseData.data.eventName, organizers: [0], members: [0], ...responseData };
+        
         const newEvent:Event = {
           userId: responseData.data.userId, // Accessing userId from data
           id: responseData.data.id, // Accessing the event ID from data
@@ -141,19 +145,55 @@ const fetchEvents = async () => {
 
 
 
-const handleModifyEvent = (eventId: number) =>{
-  toast.info('modify event functionality to be implemented');
-}
+const handleModifyEvent =async (eventId: number,updatedData: Partial<Event>) =>{
+  try{
+    const response = await fetch(`http://localhost:4000/v1/events/${eventId}`,{
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(updatedData),
+    });
+
+    const data = await response.json();
+    console.log(data);
+
+    if(!response.ok){
+      throw new Error('Failed to update event');
+    }
+setEvents(events.map(event=>event.id===eventId? {...event,...updatedData}:event));
+
+    toast.success('Event updated successfully');
+    setEditingEvent(null);
+  }catch(error){
+    toast.error('Failed to Update Event');
+  }
+};
+
+
+const handleEditClick = (event: Event) => {
+  setEditingEvent(event); // Set the current event being edited
+};
+
+const handleEditSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  if (editingEvent) {
+    const updatedData = {
+      eventName: editingEvent.eventName,
+      description: editingEvent.description,
+    };
+    await handleModifyEvent(editingEvent.id, updatedData);
+  }
+};
+
+ 
+
   return (
     <div className="container mx-auto p-4">
       <Card>
-       
-       
         <CardHeader>
           <CardTitle className="text-2xl font-bold">Event Manager</CardTitle>
         </CardHeader>
-      
-      
         <CardContent>
           <div className="flex justify-between mb-4">
             <Popover open={isCreateEventOpen} onOpenChange={setIsCreateEventOpen}>
@@ -162,9 +202,14 @@ const handleModifyEvent = (eventId: number) =>{
                   <PlusIcon className="h-4 w-4 mr-2" /> Create Event
                 </Button>
               </PopoverTrigger>
+            
+
               <CreateEventPopover onClose={() => setIsCreateEventOpen(false)} />
+
+
             </Popover>
           </div>
+
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
@@ -181,15 +226,12 @@ const handleModifyEvent = (eventId: number) =>{
                       <TableCell>{event.eventName}</TableCell>
                       <TableCell>{event.description}</TableCell>
                       <TableCell>
-
-                      <div className="flex space-x-2">
-                          <Button size="sm" variant="outline" onClick={() => handleModifyEvent(event.id)}>
+                        <div className="flex space-x-2">
+                          <Button size="sm" variant="outline" onClick={() => handleEditClick(event)}>
                             <PencilIcon className="h-4 w-4" />
-                            <span className="sr-only">Modify</span>
                           </Button>
                           <Button size="sm" variant="destructive" onClick={() => handleDeleteEvent(event.id)}>
                             <TrashIcon className="h-4 w-4" />
-                            <span className="sr-only">Delete</span>
                           </Button>
                         </div>
                       </TableCell>
@@ -197,7 +239,7 @@ const handleModifyEvent = (eventId: number) =>{
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center">
+                    <TableCell colSpan={3} className="text-center">
                       No events available.
                     </TableCell>
                   </TableRow>
@@ -207,6 +249,37 @@ const handleModifyEvent = (eventId: number) =>{
           </div>
         </CardContent>
       </Card>
+
+      {/* Edit Event Form */}
+      {editingEvent && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white p-6 rounded-md shadow-md w-96">
+            <h2 className="text-xl font-bold mb-4">Edit Event</h2>
+            <form onSubmit={handleEditSubmit}>
+              <Input
+                type="text"
+                placeholder="Event Name"
+                value={editingEvent.eventName}
+                onChange={(e) => setEditingEvent({ ...editingEvent, eventName: e.target.value })}
+                required
+              />
+              <Textarea
+                placeholder="Description"
+                value={editingEvent.description}
+                onChange={(e) => setEditingEvent({ ...editingEvent, description: e.target.value })}
+                required
+              />
+              <div className="flex justify-end space-x-2 mt-4">
+                <Button type="submit">Update Event</Button>
+                <Button variant="outline" onClick={() => setEditingEvent(null)}>
+                  Cancel
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       <ToastContainer position="bottom-right" autoClose={3000} />
     </div>
   );

@@ -1,5 +1,5 @@
 "use client"
-import { useState, FC } from 'react';
+import { useState, FC, useEffect } from 'react';
 type ViewType = "registry" | "gift" | "details" | "edit" |"giftDetails"; // Add "edit" here
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { PlusIcon, GiftIcon, TrashIcon } from 'lucide-react';
 import { useSession } from '@/context/SessionContext';
+import { toast } from 'react-toastify';
 
 
 
@@ -27,6 +28,17 @@ interface Gift {
   url: string;
 }
 
+// interface Event {
+//   id: number,
+//   userId: number;
+//   organizers: number[];
+//   eventName: string;
+//   description: string;
+//   members: number[];
+// }
+
+
+
 const Page: FC = () => {
   const [name, setName] = useState('');
   const [userId, setUserId] = useState<number | undefined>(undefined);
@@ -41,7 +53,30 @@ const Page: FC = () => {
   const [view, setView] = useState<ViewType>("registry"); 
   const [allevent,setevent] = useState<number |undefined>(undefined);
   const [selectedGift, setSelectedGift] = useState<Gift | null>(null);
+  const [registry, setRegistry] = useState<Registry[]>([]);
 
+  const session = useSession();
+  const Id = session?.user?.id;
+
+  useEffect(()=>{
+    fetchRegistry();
+  },[Id]);
+  
+  const fetchRegistry = async () => {
+    try{
+      const response = await fetch(`http://localhost:4000/v1/registries/user/${Id}`);
+      console.log(response);
+      if(!response.ok){
+        throw new Error('Failed to fetch Registry');
+      }
+      const data = await response.json();
+      setRegistry(data.data);
+    }
+    catch(error){
+      console.error('Error Fetching Registry:',error);
+      toast.error('Failed to Fetch Registry');
+    }
+  }
 
 
   async function handleRegistrySubmit(e: React.FormEvent) {

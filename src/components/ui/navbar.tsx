@@ -6,7 +6,7 @@ import ProfilePopover from './profilepop'; // Ensure correct path to ProfilePopo
 
 const Navbar: React.FC = () => {
   const session = useSession();
-
+  
   return (
     <nav className="shadow-md py-4 px-6 flex justify-between items-center bg-white relative">
       <div className="text-4xl font-bold text-black">PresentPal</div>
@@ -38,6 +38,7 @@ const Navbar: React.FC = () => {
         ) : (
           <div className="relative flex items-center mr-10">
             <ProfilePopover 
+            
               name={session.user?.username || 'User'} 
               email={session.user?.email || 'user@example.com'} 
               profilePic={session.user?.profilePic} 

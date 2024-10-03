@@ -23,7 +23,7 @@ const isSignup = pathname ==='/'
 
         <main className="flex-grow">{children}</main>
 
-        {!isSignup &&(<div  className='fixed bottom-0 w-full'> <Footer/>   </div>  )}
+        {!isSignup && <Footer/>  }
     
       </body>
     </html>

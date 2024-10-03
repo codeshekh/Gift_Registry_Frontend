@@ -14,13 +14,13 @@ interface CustomSession {
 export const useSession = (): CustomSession | null => {
   const [session, setSession] = useState<CustomSession | null>(null);
   const searchParams = useSearchParams(); 
-
   useEffect(() => {
     const userParam = searchParams.get('user'); 
     
     if (userParam) {
       try {
         const user = JSON.parse(decodeURIComponent(userParam));
+        console.log(user);
         setSession({ user });
       } catch (error) {
         console.error("Error parsing user data:", error);
@@ -29,5 +29,5 @@ export const useSession = (): CustomSession | null => {
   }, [searchParams]);
   
   return session;
-
+  
 };

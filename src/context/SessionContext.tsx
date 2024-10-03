@@ -27,12 +27,14 @@ export const SessionProvider = ({ children }: SessionProviderProps) => {
 
   useEffect(() => {
     const userParam = searchParams.get('user'); 
-
+console.log(userParam);
     if (userParam) {
       try {
         const user = JSON.parse(decodeURIComponent(userParam));
         setSession({ user });
+        
 if(user.id){
+  console.log('UserID:' ,user.id)
   localStorage.setItem('userId',user.id.toString());
 }
 
