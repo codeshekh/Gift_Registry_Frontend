@@ -1,562 +1,299 @@
-"use client"
-import { useState, FC, useEffect } from 'react';
-type ViewType = "registry" | "gift" | "details" | "edit" |"giftDetails"; // Add "edit" here
-import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import Input from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { PlusIcon, GiftIcon, TrashIcon } from 'lucide-react';
-import { useSession } from '@/context/SessionContext';
-import { toast } from 'react-toastify';
+'use client'
 
-
-
-
+import { useState, useEffect } from 'react'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card"
+import Input  from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { toast, ToastContainer } from 'react-toastify'
+import 'react-toastify/dist/ReactToastify.css'
+import { PlusIcon, Gift, Trash2, ExternalLink, Edit } from 'lucide-react'
+import { useSession } from '@/context/SessionContext'
 interface Registry {
-  id: number;
-  name: string;
-  userId: number;
-  eventId: number;
-  gifts: Gift[];
+  id: number
+  name: string
+  userId?: number
+  eventId: number
 }
 
 interface Gift {
-  id: number;
-  name: string;
-  price: number;
-  url: string;
+  id: number
+  giftName: string
+  price: number
+  giftUrl: string
+  registryId: number
+  giftStatus: boolean
 }
 
-// interface Event {
-//   id: number,
-//   userId: number;
-//   organizers: number[];
-//   eventName: string;
-//   description: string;
-//   members: number[];
-// }
+interface Event {
+  id: number
+  eventName: string
+}
 
-
-
-const Page: FC = () => {
-  const [name, setName] = useState('');
-  const [userId, setUserId] = useState<number | undefined>(undefined);
-  const [eventId, setEventId] = useState<number | undefined>(undefined);
-  const [giftName, setGiftName] = useState('');
-  const [giftURL, setURL] = useState('');
-  const [giftPrice, setGiftPrice] = useState<number | undefined>(undefined);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [registries, setRegistries] = useState<Registry[]>([]);
-  const [selectedRegistry, setSelectedRegistry] = useState<Registry | null>(null);
-  const [view, setView] = useState<ViewType>("registry"); 
-  const [allevent,setevent] = useState<number |undefined>(undefined);
-  const [selectedGift, setSelectedGift] = useState<Gift | null>(null);
-  const [registry, setRegistry] = useState<Registry[]>([]);
-
+export default function GiftRegistry() {
+  const [registries, setRegistries] = useState<Registry[]>([])
+  const [selectedRegistry, setSelectedRegistry] = useState<Registry | null>(null)
+  const [gifts, setGifts] = useState<Gift[]>([])
+  const [events, setEvents] = useState<Event[]>([])
+  const [isCreateRegistryOpen, setIsCreateRegistryOpen] = useState(false)
+  const [isAddGiftOpen, setIsAddGiftOpen] = useState(false)
+  const [newRegistry, setNewRegistry] = useState({ name: '', eventId: '' })
+  const [newGift, setNewGift] = useState({ giftName: '', giftUrl: '', price: '' })
   const session = useSession();
-  const Id = session?.user?.id;
 
-  useEffect(()=>{
-    fetchRegistry();
-  },[Id]);
-  
-  const fetchRegistry = async () => {
-    try{
-      const response = await fetch(`http://localhost:4000/v1/registries/user/${Id}`);
-      console.log(response);
-      if(!response.ok){
-        throw new Error('Failed to fetch Registry');
-      }
-      const data = await response.json();
-      setRegistry(data.data);
-    }
-    catch(error){
-      console.error('Error Fetching Registry:',error);
-      toast.error('Failed to Fetch Registry');
+  const userId = session?.user?.id
+
+  useEffect(() => {
+    fetchRegistries()
+    fetchEvents()
+  }, [])
+
+  const fetchRegistries = async () => {
+    try {
+      const response = await fetch(`http://localhost:4000/v1/registries/user-registries/${userId}`)
+      if (!response.ok) throw new Error('Failed to fetch registries')
+      const data = await response.json()
+      setRegistries(data)
+    } catch (error) {
+      console.error('Error fetching registries:', error)
+      toast.error('Failed to fetch registries')
     }
   }
 
-
-  async function handleRegistrySubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setLoading(true);
-    setError('');
-
-    if (!name || userId === undefined || eventId === undefined) {
-      setError('All fields are required');
-      setLoading(false);
-      return;
+  const fetchEvents = async () => {
+    try {
+      const response = await fetch(`http://localhost:4000/v1/events/user/${userId}`)
+      if (!response.ok) throw new Error('Failed to fetch events')
+      const data = await response.json()
+      setEvents(data.data)
+    } catch (error) {
+      console.error('Error fetching events:', error)
+      toast.error('Failed to fetch events')
     }
+  }
 
+  const fetchGifts = async (registryId: number) => {
+    try {
+      const response = await fetch(`http://localhost:4000/v1/gifts/gift-list/${registryId}`)
+      if (!response.ok) throw new Error('Failed to fetch gifts')
+      const data = await response.json()
+      setGifts(data)
+    } catch (error) {
+      console.error('Error fetching gifts:', error)
+      toast.error('Failed to fetch gifts')
+    }
+  }
+
+  const handleCreateRegistry = async (e: React.FormEvent) => {
+    e.preventDefault()
     try {
       const response = await fetch('http://localhost:4000/v1/registries', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ name, userId, eventId }),
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setRegistries([...registries, { id: data.id, name, userId, eventId, gifts: [] }]);
-        setView('details'); // Consider changing this to a default view that shows the list.
-      } else {
-        const data = await response.json();
-        setError(data.message || 'Something went wrong');
-      }
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: newRegistry.name,
+          userId,
+          eventId: parseInt(newRegistry.eventId)
+        }),
+      })
+      if (!response.ok) throw new Error('Failed to create registry')
+      const data = await response.json()
+      setRegistries([...registries, data])
+      setIsCreateRegistryOpen(false)
+      setNewRegistry({ name: '', eventId: '' })
+      toast.success('Registry created successfully')
     } catch (error) {
-      setError('Failed to submit the form');
-    } finally {
-      setLoading(false);
+      console.error('Error creating registry:', error)
+      toast.error('Failed to create registry')
     }
   }
 
-  const handleGiftSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError('');
-
-    if (!giftName || giftPrice === undefined || !selectedRegistry) {
-      setError('All fields are required');
-      setLoading(false);
-      return;
-    }
-
+  const handleAddGift = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!selectedRegistry) return
     try {
-      const giftData = {
-        giftName,
-        giftUrl: giftURL,
-        price: giftPrice,
-        registryId: selectedRegistry.id,
-      };
-
       const response = await fetch('http://localhost:4000/v1/gifts', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(giftData),
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        const updatedRegistry = { ...selectedRegistry };
-        updatedRegistry.gifts.push({ id: data.id, name: giftName, price: giftPrice, url: giftURL });
-
-        setRegistries((prevRegistries) =>
-          prevRegistries.map((registry) =>
-            registry.id === updatedRegistry.id ? updatedRegistry : registry
-          )
-        );
-        setSelectedRegistry(updatedRegistry);
-        setView('details');
-      } else {
-        const data = await response.json();
-        setError(data.message || 'Failed to add the gift');
-      }
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          giftName: newGift.giftName,
+          giftUrl: newGift.giftUrl,
+          price: parseFloat(newGift.price),
+          registryId: selectedRegistry.id,
+        }),
+      })
+      if (!response.ok) throw new Error('Failed to add gift')
+      const data = await response.json()
+      setGifts([...gifts, data])
+      setIsAddGiftOpen(false)
+      setNewGift({ giftName: '', giftUrl: '', price: '' })
+      toast.success('Gift added successfully')
     } catch (error) {
-      setError('Failed to add the gift');
-    } finally {
-      setLoading(false);
+      console.error('Error adding gift:', error)
+      toast.error('Failed to add gift')
     }
-  };
-
-  const handleButtonClick = (giftURL: string) => {
-    if (giftURL) {
-      window.open(giftURL, '_blank');
-    } else {
-      console.log('No URL set for this gift.');
-    }
-  };
-
-  const handleRegistryClick = (registry: Registry) => {
-    setSelectedRegistry(registry);
-    setView('details');
-  };
-
-
-
-//....................................fetch gift details .....................................
-const fetchGiftDetails = async (giftId: number) => {
-  console.log('Fetching details for gift ID:', giftId);
-  setLoading(true);
-  setError('');
-
-  try {
-    const response = await fetch(`http://localhost:4000/v1/gifts/${giftId}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      setError(errorData.message || 'Failed to fetch gift details');
-      return;
-    }
-
-    const data = await response.json();
-    setSelectedGift(data);
-    setView('giftDetails');
-  } catch (error) {
-    setError('Failed to fetch gift details');
-    console.error('Error fetching gift details:', error);
-  } finally {
-    setLoading(false);
   }
-};
 
-
-
-
-//. ..............................................delete regisrties............................
-
-const handleDeleteRegistry = async (registryId: number) => {
-  setLoading(true);
-  setError('');
-
-  try {
-    const response = await fetch(`http://localhost:4000/v1/registries/${registryId}`, {
-      method: 'DELETE',
-    });
-
-    if (response.ok) {
-      setRegistries(registries.filter((registry) => registry.id !== registryId));
-      setSelectedRegistry(null);
-      setView('registry');
-    } else {
-      const data = await response.json();
-      setError(data.message || 'Failed to delete the registry');
-    }
-  } catch (error) {
-    setError('Failed to delete the registry');
-  } finally {
-    setLoading(false);
-  }
-};
-
-
-
-const handleShowAllRegistries = async () => {
-  if (allevent) {
-    setLoading(true); // Start loading state
-    setError(''); // Clear any previous errors
-
+  const handleDeleteGift = async (giftId: number) => {
     try {
-      const response = await fetch(`http://localhost:4000/v1/registries/eventRegistry/${allevent}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setRegistries(data); // Update registries state with the fetched data
-      } else {
-        const data = await response.json();
-        setError(data.message || 'Failed to fetch registries');
-      }
+      const response = await fetch(`http://localhost:4000/v1/gifts/${giftId}`, {
+        method: 'DELETE',
+      })
+      if (!response.ok) throw new Error('Failed to delete gift')
+      setGifts(gifts.filter(gift => gift.id !== giftId))
+      toast.success('Gift deleted successfully')
     } catch (error) {
-      setError('Failed to fetch registries');
-    } finally {
-      setLoading(false); // End loading state
+      console.error('Error deleting gift:', error)
+      toast.error('Failed to delete gift')
     }
-  } else {
-    setError('Please provide a valid event ID'); // Error handling if allevent is not set
-  }
-};
-
-
-
-
-// .....................................................update regisrty ..................
-const handleUpdateRegistry = async (id: number) => {
-  // Ensure that the updated data is valid
-  if (!name || eventId === undefined) {
-    setError('Name and Event ID are required');
-    return;
   }
 
-  const updatedRegistryData = {
-    name,
-    eventId,
-  };
+  return (
+    <div className="container mx-auto p-4">
+      <h1 className="text-3xl font-bold mb-6">Gift Registry</h1>
+      <div className="flex justify-between mb-6">
+        <Dialog open={isCreateRegistryOpen} onOpenChange={setIsCreateRegistryOpen}>
+          <DialogTrigger asChild>
+            <Button>
+              <PlusIcon className="mr-2 h-4 w-4" /> Create Registry
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Create New Registry</DialogTitle>
+            </DialogHeader>
+            <form onSubmit={handleCreateRegistry} className="space-y-4">
+              <Input
+                placeholder="Registry Name"
+                value={newRegistry.name}
+                onChange={(e) => setNewRegistry({ ...newRegistry, name: e.target.value })}
+                required
+              />
+              <Select
+                value={newRegistry.eventId}
+                onValueChange={(value) => setNewRegistry({ ...newRegistry, eventId: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select Event" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    {events.map((event) => (
+                      <SelectItem key={event.id} value={event.id.toString()}>
+                        {event.eventName}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+              <Button type="submit">Create Registry</Button>
+            </form>
+          </DialogContent>
+        </Dialog>
+      </div>
 
-  setLoading(true);
-  setError('');
-
-  try {
-    const response = await fetch(`http://localhost:4000/v1/registries/${id}`, {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(updatedRegistryData),
-    });
-
-    if (response.ok) {
-      const updatedRegistry = await response.json();
-      
-      // Update the registries state
-      setRegistries((prevRegistries) =>
-        prevRegistries.map((registry) =>
-          registry.id === id ? { ...registry, ...updatedRegistryData } : registry
-        )
-      );
-      setView('details'); // Optionally, you can set the view to show details of the updated registry
-    } else {
-      const data = await response.json();
-      setError(data.message || 'Failed to update the registry');
-    }
-  } catch (error) {
-    setError('Failed to update the registry');
-  } finally {
-    setLoading(false);
-  }
-};
-
-
-
-return (
-  <div className="h-screen flex">
-    <ResizablePanelGroup direction={'horizontal'}>
-      <ResizablePanel defaultSize={40} className="flex flex-col border-r bg-gray-50 p-6">
-        <h1 className="text-2xl font-bold mb-6">Registries</h1>
-
-        <Button className="mb-4" onClick={() => setView('registry')}>
-          <PlusIcon className="h-4 w-4 mr-2" />
-          Create New Registry
-        </Button>
-
-        <Button className="mb-4 bg-green-500 hover:bg-green-600" onClick={() => setView('gift')} disabled={!selectedRegistry}>
-          <PlusIcon className="h-4 w-4 mr-2" />
-          Add New Gift
-        </Button>
-
-        <div className="mt-6">
-          <Input
-            type="number"
-            value={allevent}
-            onChange={(e) => setevent(Number(e.target.value))}
-            placeholder="Enter Event ID to filter"
-          />
-          <Button onClick={handleShowAllRegistries} className="mt-2">
-            Show All Registries
-          </Button>
-        </div>
-
-        <div className="mt-6">
-          <Card className="w-full max-w-4xl">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {registries.map((registry) => (
+          <Card key={registry.id} className="cursor-pointer hover:shadow-lg transition-shadow">
             <CardHeader>
-              <CardTitle className="text-2xl font-bold">Registry List</CardTitle>
+              <CardTitle>{registry.name}</CardTitle>
+              <CardDescription>
+                Event: {events.find(e => e.id === registry.eventId)?.eventName}
+              </CardDescription>
             </CardHeader>
             <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>User ID</TableHead>
-                    <TableHead>Event ID</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-  {registries.map((registry) => (
-    <TableRow key={registry.id} onClick={() => handleRegistryClick(registry)} className="cursor-pointer">
-      <TableCell>{registry.name}</TableCell>
-      <TableCell>{registry.userId}</TableCell>
-      <TableCell>{registry.eventId}</TableCell>
-      <TableCell>
-        <Button onClick={() => handleDeleteRegistry(registry.id)} className="text-red-500">
-          <TrashIcon className="h-4 w-4" />
-        </Button>
-      </TableCell>
-      <TableCell>
-        <Button onClick={() => { 
-          setSelectedRegistry(registry); 
-          setView('edit'); // This ensures the edit form appears
-        }} className='text-red-500'>
-          <PlusIcon className='h-4 w-4' />
-        </Button>
-      </TableCell>
-    </TableRow>
-  ))}
-</TableBody>
-
-              </Table>
-            </CardContent>
-          </Card>
-        </div>
-      </ResizablePanel>
-
-      <ResizableHandle className="bg-gray-400" withHandle />
-
-      <ResizablePanel className="flex flex-1 bg-white p-6">
-        {view === 'registry' && (
-          <form onSubmit={handleRegistrySubmit} className="space-y-4">
-            <h2 className="text-2xl font-bold">Create Registry</h2>
-
-            <div>
-              <label className="block text-lg font-medium">Name</label>
-              <Input
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Enter registry name"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-lg font-medium">User ID</label>
-              <Input
-                type="number"
-                value={userId}
-                onChange={(e) => setUserId(Number(e.target.value))}
-                placeholder="Enter user ID"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-lg font-medium">Event ID</label>
-              <Input
-                type="number"
-                value={eventId}
-                onChange={(e) => setEventId(Number(e.target.value))}
-                placeholder="Enter event ID"
-                required
-              />
-            </div>
-            <Button type="submit" disabled={loading}>
-              {loading ? 'Creating...' : 'Create Registry'}
-            </Button>
-          </form>
-        )}
-
-{view === 'giftDetails' && selectedGift && (
-  <div>
-    <h2 className="text-2xl font-bold">{selectedGift.name}</h2>
-    <p className="text-md">Price: ${selectedGift.price}</p>
-    <p className="text-md">URL: {selectedGift.url || 'N/A'}</p>
-    <Button onClick={() => handleButtonClick(selectedGift.url)} className="mt-2">
-      Visit Gift URL
-    </Button>
-    <Button onClick={() => setView('details')} className="mt-2">
-      Back to Registry
-    </Button>
-  </div>
-)}
-
-
-
-
-
-{view === 'edit' && selectedRegistry && (
-  <form onSubmit={(e) => { 
-    e.preventDefault(); 
-    handleUpdateRegistry(selectedRegistry.id); 
-  }} className="space-y-4">
-    <h2 className="text-2xl font-bold">Edit Registry</h2>
-
-    <div>
-      <label className="block text-lg font-medium">Name</label>
-      <Input
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-        placeholder="Enter registry name"
-        required
-      />
-    </div>
-    <div>
-      <label className="block text-lg font-medium">Event ID</label>
-      <Input
-        type="number"
-        value={eventId}
-        onChange={(e) => setEventId(Number(e.target.value))}
-        placeholder="Enter event ID"
-        required
-      />
-    </div>
-    <Button type="submit" disabled={loading}>
-      {loading ? 'Updating...' : 'Update Registry'}
-    </Button>
-  </form>
-)}
-
-
-        {view === 'gift' && selectedRegistry && (
-          <form onSubmit={handleGiftSubmit} className="space-y-4">
-            <h2 className="text-2xl font-bold">Add Gift to {selectedRegistry.name}</h2>
-
-            <div>
-              <label className="block text-lg font-medium">Gift Name</label>
-              <Input
-                value={giftName}
-                onChange={(e) => setGiftName(e.target.value)}
-                placeholder="Enter gift name"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-lg font-medium">Gift URL</label>
-              <Input
-                value={giftURL}
-                onChange={(e) => setURL(e.target.value)}
-                placeholder="Enter gift URL"
-              />
-            </div>
-            <div>
-              <label className="block text-lg font-medium">Price</label>
-              <Input
-                type="number"
-                value={giftPrice}
-                onChange={(e) => setGiftPrice(Number(e.target.value))}
-                placeholder="Enter price"
-                required
-              />
-            </div>
-            <Button type="submit" disabled={loading}>
-              {loading ? 'Adding...' : 'Add Gift'}
-            </Button>
-          </form>
-        )}
-
-{/* unable to fetch  gift details for perficualr id  */}
-
-{view === 'details' && selectedRegistry && (
-  <div>
-    <h2 className="text-2xl font-bold">{selectedRegistry.name}</h2>
-    <h3 className="text-xl font-semibold">Gifts:</h3>
-    {selectedRegistry.gifts && selectedRegistry.gifts.length > 0 ? (
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
-        {selectedRegistry.gifts.map((gift) => (
-          <Card key={gift.id} className="p-4 shadow-md rounded-lg">
-            <CardHeader>
-              <CardTitle className="text-lg font-semibold">{gift.name}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-md">Price: ${gift.price}</p>
-              <Button onClick={() => fetchGiftDetails(gift.id)} className="mt-2">
-                View Gift Details
+              <Button
+                onClick={() => {
+                  setSelectedRegistry(registry)
+                  fetchGifts(registry.id)
+                }}
+                className="w-full"
+              >
+                View Gifts
               </Button>
             </CardContent>
           </Card>
         ))}
       </div>
-    ) : (
-      <p>No gifts available for this registry.</p>
-    )}
-  </div>
-)}
 
+      {selectedRegistry && (
+        <div className="mt-8">
+          <h2 className="text-2xl font-bold mb-4">Gifts for {selectedRegistry.name}</h2>
+          <Dialog open={isAddGiftOpen} onOpenChange={setIsAddGiftOpen}>
+            <DialogTrigger asChild>
+              <Button className="mb-4">
+                <PlusIcon className="mr-2 h-4 w-4" /> Add Gift
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Add New Gift</DialogTitle>
+              </DialogHeader>
+              <form onSubmit={handleAddGift} className="space-y-4">
+                <Input
+                  placeholder="Gift Name"
+                  value={newGift.giftName}
+                  onChange={(e) => setNewGift({ ...newGift, giftName: e.target.value })}
+                  required
+                />
+                <Input
+                  placeholder="Gift URL"
+                  value={newGift.giftUrl}
+                  onChange={(e) => setNewGift({ ...newGift, giftUrl: e.target.value })}
+                  required
+                />
+                <Input
+                  type="number"
+                  placeholder="Price"
+                  value={newGift.price}
+                  onChange={(e) => setNewGift({ ...newGift, price: e.target.value })}
+                  required
+                />
+                <Button type="submit">Add Gift</Button>
+              </form>
+            </DialogContent>
+          </Dialog>
 
-      </ResizablePanel>
-    </ResizablePanelGroup>
-  </div>
-);
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {gifts.map((gift) => (
+              <Card key={gift.id}>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <Gift className="mr-2 h-5 w-5" /> {gift.giftName}
+                  </CardTitle>
+                  <CardDescription>${gift.price.toFixed(2)}</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <a
+                    href={gift.giftUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-500 hover:underline flex items-center"
+                  >
+                    View Gift <ExternalLink className="ml-1 h-4 w-4" />
+                  </a>
+                </CardContent>
+                <CardFooter className="flex justify-between">
+                  <Button variant="outline" size="sm">
+                    <Edit className="mr-2 h-4 w-4" /> Edit
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => handleDeleteGift(gift.id)}
+                  >
+                    <Trash2 className="mr-2 h-4 w-4" /> Delete
+                  </Button>
+                </CardFooter>
+              </Card>
+            ))}
+          </div>
+        </div>
+      )}
 
-};
-
-export default Page;
+      <ToastContainer />
+    </div>
+  )
+}
