@@ -12,26 +12,20 @@ export default function Home() {
     router.push('/dashboard');
   };
 
-  
   return (
-    <div 
-      className="relative min-h-screen bg-cover bg-center" 
-      style={{
-        backgroundImage: "url('/signup.jpg')" 
-      }}
-    >
-      <div className="flex items-center justify-center min-h-screen bg-black bg-opacity-50">
-        <div className="bg-white bg-opacity-10 backdrop-blur-lg p-8 rounded-lg shadow-lg max-w-sm w-full dark:bg-white dark:bg-opacity-20">
-          <h1 className="text-4xl font-bold mb-6 text-center text-white dark:text-gray-900">
+    
+      <div className="flex items-center justify-center min-h-screen bg-white bg-opacity-80">
+        <div className="bg-white backdrop-blur-lg p-8 rounded-lg shadow-lg max-w-sm w-full">
+          <h1 className="text-4xl font-bold mb-6 text-center text-gray-900">
             PresentPal
           </h1>
-          <p className="text-center text-white mb-6 dark:text-gray-800">
+          <p className="text-center text-gray-800 mb-6">
             Where you can choose gifts for others
           </p>
     
           <GoogleLoginButton /> 
         </div>
       </div>
-    </div>
+    
   );
 }

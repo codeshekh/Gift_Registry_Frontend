@@ -34,7 +34,7 @@ useEffect(()=>{
 
 const fetchEvents = async () => {
   try{
-    const response = await fetch(`http://localhost:4000/v1/events/user/${userId}`);
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/v1/events/user/${userId}`);
     console.log(response);
     if(!response.ok){
       throw new Error('Failed to fetch events');
@@ -57,7 +57,7 @@ const fetchEvents = async () => {
 
       try {
         // Sending a POST request to the backend using Fetch
-        const response = await fetch('http://localhost:4000/v1/events/', {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/v1/events/`, {
           
           method: 'POST',
           headers: {
@@ -126,7 +126,7 @@ console.log(response+"create");
 
   const handleDeleteEvent = async (eventId: number) => {
     try {
-      const response = await fetch(`http://localhost:4000/v1/events/${eventId}`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/v1/events/${eventId}`, {
         method: 'DELETE',
       });
       if (!response.ok) {
@@ -147,7 +147,7 @@ console.log(response+"create");
 
 const handleModifyEvent =async (eventId: number,updatedData: Partial<Event>) =>{
   try{
-    const response = await fetch(`http://localhost:4000/v1/events/${eventId}`,{
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/v1/events/${eventId}`,{
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',

@@ -12,9 +12,8 @@ import 'react-toastify/dist/ReactToastify.css'
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { useSession } from '@/context/SessionContext';
+import { useSession } from '@/context/SessionContext'
 
 interface Group {
   id: number
@@ -22,7 +21,7 @@ interface Group {
   groupName: string
   description: string
   memberIds: number[]
-  members?: User[] // Add members property to Group interface
+  members?: User[]
 }
 
 interface User {
@@ -39,8 +38,8 @@ interface UpdateGroupDto {
 }
 
 export default function GroupManager() {
-  const session = useSession();
-  const userId = session?.user?.id;
+  const session = useSession()
+  const userId = session?.user?.id
 
   const [groups, setGroups] = useState<Group[]>([])
   const [users, setUsers] = useState<User[]>([])
@@ -53,13 +52,15 @@ export default function GroupManager() {
   const [selectedGroup, setSelectedGroup] = useState<Group | null>(null)
 
   useEffect(() => {
-    fetchGroups()
-    fetchAllUsers()
-  }, [])
+    if (userId) {
+      fetchGroups()
+      fetchAllUsers()
+    }
+  }, [userId])
 
   const fetchGroups = async () => {
     try {
-      const response = await fetch(`http://localhost:4000/v1/groups/user/${userId}`)
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/v1/groups/user/${userId}`)
       if (!response.ok) throw new Error('Failed to fetch groups')
       const data = await response.json()
       setGroups(data.data)
@@ -71,7 +72,7 @@ export default function GroupManager() {
 
   const fetchAllUsers = async () => {
     try {
-      const response = await fetch('http://localhost:4000/v1/users/all')
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/v1/users/all`)
       if (!response.ok) throw new Error('Failed to Fetch Users')
       const data = await response.json()
       setUsers(data)
@@ -82,15 +83,19 @@ export default function GroupManager() {
   }
 
   const handleMemberSelect = (userId: number) => {
-    setSelectedMemberIds(prev => 
-      prev.includes(userId) ? prev.filter(id => id !== userId) : [...prev, userId]
-    )
-  }
+    setSelectedMemberIds(prev => {
+      // Fallback to an empty array if prev is undefined
+      const currentSelectedIds = prev || [];
+      return currentSelectedIds.includes(userId)
+        ? currentSelectedIds.filter(id => id !== userId)
+        : [...currentSelectedIds, userId];
+    });
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     try {
-      const response = await fetch('http://localhost:4000/v1/groups/', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/v1/groups/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -104,10 +109,10 @@ export default function GroupManager() {
       const responseData = await response.json()
       if (responseData && responseData.data) {
         const newGroup: Group = {
-          userId: responseData.data.userId,
-          id: responseData.data.id,
-          groupName: responseData.data.groupName,
-          description: responseData.data.description,
+          id: responseData.data,
+          userId: userId!,
+          groupName,
+          description,
           memberIds: selectedMemberIds,
         }
         setGroups(prevGroups => [...prevGroups, newGroup])
@@ -128,6 +133,7 @@ export default function GroupManager() {
     setSelectedMemberIds([])
     setIsCreateGroupOpen(false)
     setIsEditGroupOpen(false)
+    setEditingGroup(null)
   }
 
   const handleEditGroup = (group: Group) => {
@@ -139,13 +145,13 @@ export default function GroupManager() {
   }
 
   const handleShowGroupMembers = (group: Group) => {
-    fetchGroupDetails(group.id); 
-    setSelectedGroup(group);
+    fetchGroupDetails(group.id)
+    setSelectedGroup(group)
   }
 
   const handleDeleteGroup = async (groupId: number) => {
     try {
-      const response = await fetch(`http://localhost:4000/v1/groups/${groupId}`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/v1/groups/${groupId}`, {
         method: 'DELETE',
       })
       if (!response.ok) throw new Error('Failed to delete group')
@@ -159,15 +165,15 @@ export default function GroupManager() {
 
   const fetchGroupDetails = async (groupId: number) => {
     try {
-      const response = await fetch(`http://localhost:4000/v1/groups/${groupId}`);
-      if (!response.ok) throw new Error('Failed to fetch group details');
-      const data = await response.json();
-      setSelectedGroup({ ...data.data, members: data.data.members || [] }); // Ensure members exist
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/v1/groups/${groupId}`)
+      if (!response.ok) throw new Error('Failed to fetch group details')
+      const data = await response.json()
+      setSelectedGroup({ ...data.data, members: data.data.members || [] })
     } catch (error) {
-      console.error('Error fetching group details:', error);
-      toast.error('Failed to fetch group details');
+      console.error('Error fetching group details:', error)
+      toast.error('Failed to fetch group details')
     }
-  };
+  }
 
   const handleUpdateGroup = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -176,7 +182,7 @@ export default function GroupManager() {
       const currentMemberIds = editingGroup.memberIds || []
       const newMembers = selectedMemberIds.filter(id => !currentMemberIds.includes(id))
       const removedMembers = currentMemberIds.filter(id => !selectedMemberIds.includes(id))
-      const response = await fetch(`http://localhost:4000/v1/groups/${editingGroup.id}`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/v1/groups/${editingGroup.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -205,7 +211,6 @@ export default function GroupManager() {
       console.error('Error updating group:', error)
     }
   }
-
 
   return (
     <div className="container mx-auto p-4">
@@ -238,27 +243,27 @@ export default function GroupManager() {
               <div>
                 <Label className="text-sm font-medium">Select Members:</Label>
                 <ScrollArea className="h-[200px] w-full border rounded-md p-4 mt-2">
-                  {users.map(user => (
-                    <div key={user.id} className="flex items-center space-x-2 py-2">
-                      <Checkbox
-                        id={`create-user-${user.id}`}
-                        checked={Array.isArray(selectedMemberIds) && selectedMemberIds.includes(user.id)}
-                        onCheckedChange={() => handleMemberSelect(user.id)}
-                      />
-                      <Label htmlFor={`create-user-${user.id}`} className="flex items-center cursor-pointer">
-                        <Avatar>
-                          <AvatarImage 
-                            src={`https://ui-avatars.com/api/?name=${user.username}&background=random`} 
-                            alt={user.username || 'User Avatar'} 
-                          />
-                          <AvatarFallback>
-                            {user.username ? user.username[0].toUpperCase() : 'U'}
-                          </AvatarFallback>
-                        </Avatar>
-                        <span className="ml-2">{user.username || 'Unknown User'}</span>
-                      </Label>
-                    </div>
-                  ))}
+                {users.map(user => (
+        <div key={user.id} className="flex items-center space-x-2 py-2">
+          <Checkbox
+            id={`create-user-${user.id}`}
+            checked={(selectedMemberIds || []).includes(user.id)} // Check if the user is selected
+            onCheckedChange={() => handleMemberSelect(user.id)} // Handle checkbox toggle
+          />
+          <Label htmlFor={`create-user-${user.id}`} className="flex items-center cursor-pointer">
+            <Avatar>
+              <AvatarImage 
+                src={`https://ui-avatars.com/api/?name=${user.username}&background=random`} 
+                alt={user.username || 'User Avatar'} 
+              />
+              <AvatarFallback>
+                {user.username ? user.username[0].toUpperCase() : 'U'} {/* Fallback if username is not available */}
+              </AvatarFallback>
+            </Avatar>
+            <span className="ml-2">{user.username || 'Unknown User'}</span> {/* Display username */}
+          </Label>
+        </div>
+      ))}
                 </ScrollArea>
               </div>
               <Button type="submit" className="mt-4">Create Group</Button>
@@ -266,39 +271,39 @@ export default function GroupManager() {
           </DialogContent>
         </Dialog>
       </div>
-  
+
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {groups.map(group => (
-          <Card key={group.id} className="bg-gray-100 rounded-lg shadow-md overflow-hidden">
-            <CardHeader className="bg-gray-200 p-4">
-              <CardTitle className="text-xl font-bold">{group.groupName}</CardTitle>
-              <CardDescription className="text-sm text-gray-600">{group.description}</CardDescription>
-            </CardHeader>
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <Button variant="ghost" onClick={() => handleShowGroupMembers(group)}>
-                  <UsersIcon className="h-4 w-4 mr-2" /> View Members
-                </Button>
-                <div className="flex space-x-2">
-                  <Button onClick={() => handleEditGroup(group)} variant="outline">
-                    <PencilIcon className="h-4 w-4" />
-                  </Button>
-                  <Button onClick={() => handleDeleteGroup(group.id)} variant="outline" color="red">
-                    <TrashIcon className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-  
-      <Dialog open={isEditGroupOpen} onOpenChange={setIsEditGroupOpen}>
-        <DialogTrigger asChild>
-          <Button onClick={() => { setIsEditGroupOpen(true); resetForm(); }}>
-            Edit Group
+  {groups.map(group => (
+    <Card key={group.id} className="bg-white text-black rounded-lg shadow-md overflow-hidden">
+      <CardHeader className="bg-white p-4">
+        <CardTitle className="text-xl font-bold">{group.groupName}</CardTitle>
+        <CardDescription className="text-sm">{group.description}</CardDescription>
+      </CardHeader>
+      <CardContent className="p-4">
+        <div className="flex items-center justify-between">
+          <Button variant="ghost" onClick={() => handleShowGroupMembers(group)}>
+            <UsersIcon className="h-4 w-4 mr-2" /> View Members
           </Button>
-        </DialogTrigger>
+          <div className="flex space-x-2">
+            <Button onClick={() => handleEditGroup(group)} variant="outline">
+              <PencilIcon className="h-4 w-4" />
+            </Button>
+            <Button
+              onClick={() => handleDeleteGroup(group.id)}
+              className="bg-red-500 text-white border border-white"
+            >
+              <TrashIcon className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  ))}
+</div>
+
+
+
+      <Dialog open={isEditGroupOpen} onOpenChange={setIsEditGroupOpen}>
         <DialogContent className="sm:max-w-[425px] bg-white text-black">
           <DialogHeader>
             <DialogTitle>Edit Group</DialogTitle>
@@ -324,7 +329,7 @@ export default function GroupManager() {
                   <div key={user.id} className="flex items-center space-x-2 py-2">
                     <Checkbox
                       id={`edit-user-${user.id}`}
-                      checked={Array.isArray(selectedMemberIds) && selectedMemberIds.includes(user.id)}
+                      checked={(selectedMemberIds || []).includes(user.id)}
                       onCheckedChange={() => handleMemberSelect(user.id)}
                     />
                     <Label htmlFor={`edit-user-${user.id}`} className="flex items-center cursor-pointer">
@@ -347,7 +352,7 @@ export default function GroupManager() {
           </form>
         </DialogContent>
       </Dialog>
-  
+
       <Dialog open={!!selectedGroup} onOpenChange={() => setSelectedGroup(null)}>
         <DialogContent className="sm:max-w-[425px] bg-white text-black">
           <DialogHeader>
@@ -378,9 +383,10 @@ export default function GroupManager() {
           </div>
         </DialogContent>
       </Dialog>
-  
+
+      
+
       <ToastContainer />
     </div>
-  );
-  
+  )
 }

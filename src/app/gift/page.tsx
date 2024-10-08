@@ -21,7 +21,7 @@ const GiftPage: FC = () => {
   const fetchGifts = async (registryId: number | undefined) => {
     if (!registryId) return;
     try {
-      const response = await fetch(`http://localhost:4000/gifts/registry/${registryId}`);
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/gifts/registry/${registryId}`);
       if (response.ok) {
         const data = await response.json();
         setGifts(data); // Update state with fetched gifts
@@ -60,7 +60,7 @@ const GiftPage: FC = () => {
     };
 
     try {
-      const response = await fetch("http://localhost:4000/gifts", {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/gifts`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -86,7 +86,7 @@ const GiftPage: FC = () => {
 
   const handleDeleteGift = async (id: number) => {
     try {
-      const response = await fetch(`http://localhost:4000/gifts/${id}`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/gifts/${id}`, {
         method: "DELETE",
       });
 

@@ -15,13 +15,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <SessionProvider>
       <html lang="en">
         <body className="flex flex-col min-h-screen bg-white">
-          {!isSignup && <Navbar />}
+          {!isSignup && <Navbar />} {/* Add glow class here */}
 
-          <main className="flex-grow bg-gradient-to-b from-blue-50 to-white">
+          <main className="flex-grow bg-white">
             {children}
           </main>
 
-          {!isSignup && <Footer />}
+          {!isSignup && <Footer/>} {/* Add glow class here */}
         </body>
       </html>
     </SessionProvider>

@@ -1,124 +1,254 @@
 'use client'
-import React, { useEffect, useState } from 'react';
-import axios from 'axios';
 
-const Page: React.FC = () => {
-  const [typedText, setTypedText] = useState('');
-  const fullText = "W_elcome to Present Pal!";
-  const descriptionText = "Your AI-powered event management solution.";
-  const [searchQuery, setSearchQuery] = useState('');
-  const [aiResponse, setAiResponse] = useState('');
-  const [suggestions, setSuggestions] = useState<string[]>([]);
+import { useState, useEffect } from 'react'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Button } from "@/components/ui/button"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { CalendarDays, Gift, Users, X, ChevronDown, ChevronUp } from "lucide-react"
+import { toast, ToastContainer } from 'react-toastify'
+import 'react-toastify/dist/ReactToastify.css'
+import { useSession } from '@/context/SessionContext'
 
-  // Typing effect for welcome text
+interface Event {
+  id: number
+  userId: number
+  eventName: string
+  description: string
+  createdAt: string
+  updatedAt: string
+  role: 'organizer' | 'invitee'
+}
+
+interface Registry {
+  id: number
+  name: string
+  userId: number
+  eventId: number
+  gifts?: Gift[]
+}
+
+interface Gift {
+  id: number
+  giftName: string
+  giftUrl: string
+  price: number
+}
+
+export default function EventDashboard() {
+  const [events, setEvents] = useState<Event[]>([])
+  const [selectedEventRegistries, setSelectedEventRegistries] = useState<Registry[]>([])
+  const [activeTab, setActiveTab] = useState<'all' | 'created' | 'invited'>('all')
+  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null)
+  const session = useSession()
+  const userId = session?.user?.id 
+
   useEffect(() => {
-    let index = 0;
-    const typingInterval = setInterval(() => {
-      if (index < fullText.length) {
-        setTypedText((prev) => prev + fullText.charAt(index));
-        index++;
+    if(userId){
+      fetchEvents()
+    }
+   
+  }, [userId])
+
+  const fetchEvents = async () => {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/v1/events/user/${userId}`)
+      if (!response.ok) throw new Error('Failed to fetch events')
+      const data = await response.json()
+      console.log('Fetched events:', data); 
+
+      
+      if (Array.isArray(data.data)) {
+        setEvents(data.data); 
       } else {
-        clearInterval(typingInterval);
+        console.error('Unexpected response format:', data);
+        setEvents([]); 
       }
-    }, 100);
-
-    return () => clearInterval(typingInterval);
-  }, []);
-
-  // Function to fetch suggestions
-  const handleSuggestions = async (query: string) => {
-    if (!query) {
-      setSuggestions([]);
-      return;
-    }
-
-    try {
-      const response = await axios.post('http://localhost:4000/ai/suggestions', {
-        query,
-      });
-      setSuggestions(response.data.suggestions);
     } catch (error) {
-      console.error('Error fetching suggestions:', error);
-      setSuggestions([]);
+      console.error('Error fetching events:', error)
+      toast.error('Failed to fetch events')
+      setEvents([]); 
     }
-  };
+  }
 
-  // Function to fetch search results
-  const handleSearch = async () => {
-    if (!searchQuery) return;
-
+  const fetchRegistries = async (eventId: number) => {
     try {
-      const response = await axios.post('http://localhost:4000/ai', {
-        query: searchQuery,
-      });
-      setAiResponse(response.data.result);
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/v1/registries/event-registry/${eventId}`)
+      if (!response.ok) throw new Error('Failed to fetch registries')
+      const data = await response.json()
+      const registriesWithGifts = await Promise.all(data.map(async (registry: Registry) => {
+        const gifts = await fetchGifts(registry.id)
+        return { ...registry, gifts }
+      }))
+      setSelectedEventRegistries(registriesWithGifts)
     } catch (error) {
-      console.error('Error fetching AI response:', error);
-      setAiResponse('Error fetching AI response');
+      console.error('Error fetching registries:', error)
+      toast.error('Failed to fetch registries')
     }
-  };
+  }
 
-  // Handle input change for real-time suggestions
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const query = e.target.value;
-    setSearchQuery(query);
-    handleSuggestions(query); // Fetch suggestions based on input
-  };
+  const fetchGifts = async (registryId: number): Promise<Gift[]> => {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/v1/gifts/gift-list/${registryId}`)
+      if (!response.ok) throw new Error('Failed to fetch gifts')
+      const data = await response.json()
+      return data
+    } catch (error) {
+      console.error('Error fetching gifts:', error)
+      toast.error('Failed to fetch gifts')
+      return []
+    }
+  }
 
-  // Handle suggestion click to update the search query
-  const handleSuggestionClick = (suggestion: string) => {
-    setSearchQuery(suggestion);
-    setSuggestions([]); // Clear suggestions after selecting one
-  };
+  const handleEventClick = (event: Event) => {
+    setSelectedEvent(event)
+    fetchRegistries(event.id)
+  }
+
+  const filteredEvents = events.filter(event => {
+    if (activeTab === 'all') return true
+    if (activeTab === 'created') return event.role === 'organizer'
+    if (activeTab === 'invited') return event.role === 'invitee'
+    return false
+  })
 
   return (
-    <div
-      className="flex items-center justify-center h-screen bg-cover bg-center mt-0.5 mb-0.4"
-      style={{ backgroundImage: "url('/home.jpg')" }}
-    >
-      <div className="flex flex-col items-center bg-white bg-opacity-75 rounded-lg p-6">
-        <h1 className="text-4xl font-bold text-black mt-4">{typedText}</h1>
-        <p className="text-lg text-gray-700 mt-2">{descriptionText}</p>
-
-        <div className="relative mt-4">
-          <input
-            type="text"
-            placeholder="Use AI"
-            value={searchQuery}
-            onChange={handleInputChange} // Update input state and fetch suggestions
-            className="border border-gray-300 rounded-lg p-2 w-64 focus:outline-none focus:ring-2 focus:ring-blue-500"
+    <div className="container mx-auto p-4">
+      
+      <Tabs defaultValue="all" className="w-full" onValueChange={(value) => setActiveTab(value as 'all' | 'created' | 'invited')}>
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="all">All Events</TabsTrigger>
+          <TabsTrigger value="created">Created Events</TabsTrigger>
+          <TabsTrigger value="invited">Invited Events</TabsTrigger>
+        </TabsList>
+        <TabsContent value="all" className="mt-6">
+          <EventList 
+            events={filteredEvents} 
+            onEventClick={handleEventClick} 
           />
-          <button
-            onClick={handleSearch}
-            className="ml-2 p-2 bg-blue-500 text-white rounded-lg"
-          >
-            Search
-          </button>
-
-          {/* Suggestions dropdown */}
-          {suggestions.length > 0 && (
-            <ul className="absolute top-full mt-1 w-64 bg-white border border-gray-300 rounded-lg shadow-lg z-10">
-              {suggestions.map((suggestion, index) => (
-                <li
-                  key={index}
-                  className="p-2 hover:bg-gray-200 cursor-pointer"
-                  onClick={() => handleSuggestionClick(suggestion)} // Update search query on click
-                >
-                  {suggestion}
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-
-        {aiResponse && (
-          <div className="mt-4 p-2 border border-gray-300 rounded-lg bg-white">
-            <p className="text-lg text-gray-800">{aiResponse}</p>
-          </div>
-        )}
-      </div>
+        </TabsContent>
+        <TabsContent value="created" className="mt-6">
+          <EventList 
+            events={filteredEvents} 
+            onEventClick={handleEventClick} 
+          />
+        </TabsContent>
+        <TabsContent value="invited" className="mt-6">
+          <EventList 
+            events={filteredEvents} 
+            onEventClick={handleEventClick} 
+          />
+        </TabsContent>
+      </Tabs>
+      <EventDetailsDialog 
+        event={selectedEvent} 
+        registries={selectedEventRegistries} 
+        onClose={() => setSelectedEvent(null)} 
+      />
+      <ToastContainer />
     </div>
-  );
-};
+  )
+}
 
-export default Page;
+interface EventListProps {
+  events: Event[]
+  onEventClick: (event: Event) => void
+}
+
+function EventList({ events, onEventClick }: EventListProps) {
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {events.map(event => (
+        <Card key={event.id} className="flex flex-col cursor-pointer hover:shadow-lg transition-shadow" onClick={() => onEventClick(event)}>
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <CalendarDays className="mr-2 h-4 w-4" />
+              {event.eventName}
+            </CardTitle>
+            <CardDescription>{event.description}</CardDescription>
+          </CardHeader>
+          <CardContent className="flex-grow">
+            <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+              <Users className="h-4 w-4" />
+              <span>{event.role === 'organizer' ? 'Organizer' : 'Invitee'}</span>
+            </div>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  )
+}
+
+interface EventDetailsDialogProps {
+  event: Event | null
+  registries: Registry[]
+  onClose: () => void
+}
+
+function EventDetailsDialog({ event, registries, onClose }: EventDetailsDialogProps) {
+  const [expandedRegistry, setExpandedRegistry] = useState<number | null>(null)
+
+  if (!event) return null
+
+  return (
+    <Dialog open={!!event} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-[600px] bg-white rounded-lg shadow-lg p-6" aria-describedby="event-details-description">
+        <DialogHeader className="flex items-center justify-between">
+          <DialogTitle className="text-xl font-bold">{event.eventName}</DialogTitle>
+          <Button variant="ghost" size="icon" onClick={onClose}>
+            <X className="h-5 w-5 text-gray-500" />
+          </Button>
+        </DialogHeader>
+        <div id="event-details-description" className="mt-2">
+          <p className="text-sm text-gray-500">{event.description}</p>
+        </div>
+        <div className="mt-4">
+          <h4 className="font-semibold mb-3 text-lg">Registries</h4>
+          <ScrollArea className="h-[300px] w-full rounded-md border bg-gray-50 p-4">
+            {registries && registries.length > 0 ? (
+              registries.map(registry => (
+                <div key={registry.id} className="bg-white shadow-sm rounded-lg p-3 mb-3 border border-gray-200">
+                  <div className="flex items-center justify-between cursor-pointer" onClick={() => setExpandedRegistry(expandedRegistry === registry.id ? null : registry.id)}>
+                    <div className="flex items-center space-x-4">
+                      <Avatar className="h-10 w-10">
+                        <AvatarFallback>
+                          <Gift className="h-6 w-6 text-gray-400" />
+                        </AvatarFallback>
+                      </Avatar>
+                      <p className="text-sm font-medium leading-none">{registry.name}</p>
+                    </div>
+                    {expandedRegistry === registry.id ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                  </div>
+                  {expandedRegistry === registry.id && (
+                    <div className="mt-3 pl-14">
+                      <h5 className="font-semibold mb-2">Gifts:</h5>
+                      {registry.gifts && registry.gifts.length > 0 ? (
+                        registry.gifts.map(gift => (
+<div key={gift.id} className="flex items-center justify-between text-sm text-gray-600 mb-1">
+                            <span>{gift.giftName}</span>
+                            <span className="text-gray-500">${gift.price.toFixed(2)}</span>
+                            {gift.giftUrl && (
+                              <a href={gift.giftUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">
+                                View Gift
+                              </a>
+                            )}
+                          </div>
+                        ))
+                      ) : (
+                        <div className="text-sm text-gray-500">No gifts found.</div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              ))
+            ) : (
+              <div className="text-sm text-gray-500">No registries found for this event.</div>
+            )}
+          </ScrollArea>
+        </div>
+      </DialogContent>
+    </Dialog>
+  )
+}
