@@ -2,60 +2,57 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Define light mode and dark mode variables */
-:root {
-  --background: #ffffff; /* Light mode background */
-  --foreground: #171717; /* Light mode foreground */
-  
-  /* Base Layer for Light Theme */
-  --card: 0 0% 100%;
-  --card-foreground: 240 10% 3.9%;
-  --popover: 0 0% 100%;
-  --popover-foreground: 240 10% 3.9%;
-  --primary: 240 5.9% 10%;
-  --primary-foreground: 0 0% 98%;
-  --secondary: 240 4.8% 95.9%;
-  --secondary-foreground: 240 5.9% 10%;
-  --muted: 240 4.8% 95.9%;
-  --muted-foreground: 240 3.8% 46.1%;
-  --accent: 240 4.8% 95.9%;
-  --accent-foreground: 240 5.9% 10%;
-  --destructive: 0 84.2% 60.2%;
-  --destructive-foreground: 0 0% 98%;
-  --border: 240 5.9% 90%;
-  --input: 240 5.9% 90%;
-  --ring: 240 5.9% 10%;
-  --radius: 1rem;
-  --chart-1: 12 76% 61%;
-  --chart-2: 173 58% 39%;
-  --chart-3: 197 37% 24%;
-  --chart-4: 43 74% 66%;
-  --chart-5: 27 87% 67%;
-}
 
-@media (prefers-color-scheme: dark) {
+
+@layer base {
   :root {
-    --background: #0a0a0a; /* Dark mode background */
-    --foreground: #ededed; /* Dark mode foreground */
+    --background: 0 0% 100%;
+    --foreground: 20 14.3% 4.1%;
+    --card: 0 0% 100%;
+    --card-foreground: 20 14.3% 4.1%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 20 14.3% 4.1%;
+    --primary: 24.6 95% 53.1%;
+    --primary-foreground: 60 9.1% 97.8%;
+    --secondary: 60 4.8% 95.9%;
+    --secondary-foreground: 24 9.8% 10%;
+    --muted: 60 4.8% 95.9%;
+    --muted-foreground: 25 5.3% 44.7%;
+    --accent: 60 4.8% 95.9%;
+    --accent-foreground: 24 9.8% 10%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 60 9.1% 97.8%;
+    --border: 20 5.9% 90%;
+    --input: 20 5.9% 90%;
+    --ring: 24.6 95% 53.1%;
+    --radius: 1rem;
+    --chart-1: 12 76% 61%;
+    --chart-2: 173 58% 39%;
+    --chart-3: 197 37% 24%;
+    --chart-4: 43 74% 66%;
+    --chart-5: 27 87% 67%;
+  }
 
-    /* Base Layer for Dark Theme */
-    --card: 240 10% 3.9%;
-    --card-foreground: 0 0% 98%;
-    --popover: 240 10% 3.9%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 240 5.9% 10%;
-    --secondary: 240 3.7% 15.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 240 3.7% 15.9%;
-    --muted-foreground: 240 5% 64.9%;
-    --accent: 240 3.7% 15.9%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 240 3.7% 15.9%;
-    --input: 240 3.7% 15.9%;
-    --ring: 240 4.9% 83.9%;
+  .dark {
+    --background: 20 14.3% 4.1%;
+    --foreground: 60 9.1% 97.8%;
+    --card: 20 14.3% 4.1%;
+    --card-foreground: 60 9.1% 97.8%;
+    --popover: 20 14.3% 4.1%;
+    --popover-foreground: 60 9.1% 97.8%;
+    --primary: 20.5 90.2% 48.2%;
+    --primary-foreground: 60 9.1% 97.8%;
+    --secondary: 12 6.5% 15.1%;
+    --secondary-foreground: 60 9.1% 97.8%;
+    --muted: 12 6.5% 15.1%;
+    --muted-foreground: 24 5.4% 63.9%;
+    --accent: 12 6.5% 15.1%;
+    --accent-foreground: 60 9.1% 97.8%;
+    --destructive: 0 72.2% 50.6%;
+    --destructive-foreground: 60 9.1% 97.8%;
+    --border: 12 6.5% 15.1%;
+    --input: 12 6.5% 15.1%;
+    --ring: 20.5 90.2% 48.2%;
     --chart-1: 220 70% 50%;
     --chart-2: 160 60% 45%;
     --chart-3: 30 80% 55%;
@@ -67,27 +64,17 @@
 /* Body Styles */
 body {
   color: var(--foreground); /* Set text color */
-  background: var(--background); /* Set background color */
+  background-color: var(--background); /* Set pure white background */
   font-family: Arial, Helvetica, sans-serif; /* Set default font */
 }
 
-/* Glow Effect Styles */
+/* Remove glow and shine effect styles if not needed for the white screen */
 .glow {
-  position: relative;
-  overflow: hidden; 
+  display: none;
 }
 
-.glow::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: -1; /* Place the glow behind the content */
-  filter: blur(30px); /* Adjust the blur radius as needed */
-  background: rgba(255, 255, 255, 0.7); /* White color with some transparency */
-  opacity: 0.5; /* Adjust opacity to control the glow intensity */
+.shining-effect {
+  display: none;
 }
 
 /* Custom Utility Class */
@@ -97,36 +84,10 @@ body {
   }
 }
 
-
-
-/* Add this CSS to your global stylesheet or a CSS module */
-@keyframes shine {
-  0% {
-    background-position: -200%;
-  }
-  100% {
-    background-position: 200%;
-  }
-}
-
-.shining-effect {
-  background: linear-gradient(
-    90deg,
-    rgba(255, 255, 255, 0.3) 25%,
-    rgba(255, 255, 255, 0) 50%,
-    rgba(255, 255, 255, 0.3) 75%
-  );
-  background-size: 400% 100%;
-  animation: shine 2s infinite; /* The effect lasts for 2 seconds */
-}
-
-
-
-
 /* Apply Tailwind utility styles using theme variables */
 @layer base {
   * {
-    @apply border-border; /* Apply border styles */
+    @apply border-border; /* Apply border styles if needed */
   }
 
   body {

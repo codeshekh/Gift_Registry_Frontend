@@ -247,20 +247,20 @@ export default function GroupManager() {
         <div key={user.id} className="flex items-center space-x-2 py-2">
           <Checkbox
             id={`create-user-${user.id}`}
-            checked={(selectedMemberIds || []).includes(user.id)} // Check if the user is selected
-            onCheckedChange={() => handleMemberSelect(user.id)} // Handle checkbox toggle
+            checked={(selectedMemberIds || []).includes(user.id)} 
+            onCheckedChange={() => handleMemberSelect(user.id)} 
           />
           <Label htmlFor={`create-user-${user.id}`} className="flex items-center cursor-pointer">
             <Avatar>
               <AvatarImage 
-                src={`https://ui-avatars.com/api/?name=${user.username}&background=random`} 
+                src={`${process.env.NEXT_PUBLIC_CONTACT_API}/api/?name=${user.username}&background=random`} 
                 alt={user.username || 'User Avatar'} 
               />
               <AvatarFallback>
-                {user.username ? user.username[0].toUpperCase() : 'U'} {/* Fallback if username is not available */}
+                {user.username ? user.username[0].toUpperCase() : 'U'} 
               </AvatarFallback>
             </Avatar>
-            <span className="ml-2">{user.username || 'Unknown User'}</span> {/* Display username */}
+            <span className="ml-2">{user.username || 'Unknown User'}</span> 
           </Label>
         </div>
       ))}

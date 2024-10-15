@@ -13,13 +13,13 @@ import { useSession } from '@/context/SessionContext';
 import { useRouter } from 'next/navigation';  // Use the correct router import for Next.js 13+
 
 interface ProfileProps {
-  id: number
+  
   name: string
   email: string
   profilePic?: string
 }
 
-export default function ProfilePopover({ id, name, email, profilePic }: ProfileProps) {
+export default function ProfilePopover({ name, email, profilePic }: ProfileProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editedName, setEditedName] = useState(name);
   const [editedEmail, setEditedEmail] = useState(email);

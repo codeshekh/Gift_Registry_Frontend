@@ -3,11 +3,11 @@ import { Facebook, Twitter, Instagram, Github } from 'lucide-react';
 
 export default function Footer() {
   return (
-    <footer className="bg-black text-white py-1">
-      <div className="container mx-auto px-4">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+    <footer className="bg-rose-100 text-black py-1 h-64s">
+      <div className="container mx-auto px-2">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-12">
           <div className="md:col-span-2">
-            <h2 className="text-2xl font-bold mb-4">PresentPal</h2>
+            <h2 className="text-2xl font-bold mb-4 mt-3">PresentPal</h2>
             <p className="mb-4">Making gift-giving easier and more thoughtful.</p>
           </div>
           <div>
@@ -38,7 +38,7 @@ export default function Footer() {
 
           <div>
             <h3 className="text-lg font-semibold mb-4">Connect With Us</h3>
-            <div className="flex space-x-4">
+            <div className="flex space-x-4 text-orange-600">
               <a
                 href="https://facebook.com"
                 target="_blank"
