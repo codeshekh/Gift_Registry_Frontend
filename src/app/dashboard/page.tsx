@@ -6,6 +6,9 @@ import { PlusSquare, Share2 } from 'lucide-react';
 import CreateEventForm from '@/components/ui/createeventbutton'; // Ensure this is the correct path
 import { useSession } from '@/context/SessionContext';
 import { useRouter } from 'next/navigation';
+import ParticleBackground from '@/components/ui/partical';
+
+
 interface Group {
   id: number;
   groupName: string;
@@ -18,7 +21,8 @@ const mockGroups: Group[] = [
 ];
 
 export default function HomeDashboard() {
-  const [isFormOpen, setIsFormOpen] = useState(false); // State to control the form visibility
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [showParticles, setShowParticles] = useState(false); // State to control the form visibility
   const session = useSession();
   const userId = session?.user?.id;
   const router = useRouter();
@@ -32,8 +36,19 @@ export default function HomeDashboard() {
   
   };
 
+
+  const handleShareClick = () => {
+    setShowParticles(true);
+    setTimeout(() => {
+      setShowParticles(false); // Hide particles after a delay
+    }, 3000); // Adjust the delay as needed
+  };
+
+
+
   return (
     <div className="min-h-screen bg-white">
+      <ParticleBackground isVisible={showParticles} />
       <main className="container mx-auto px-4 py-12">
         <div className="grid md:grid-cols-2 gap-8 items-center">
           <div className='mt-14 ml-8'>

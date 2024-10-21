@@ -290,7 +290,7 @@ export default function GroupManager() {
             </Button>
             <Button
               onClick={() => handleDeleteGroup(group.id)}
-              className="bg-red-500 text-white border border-white"
+             className="text-black border bg-white border-white hover:bg-red-500"
             >
               <TrashIcon className="h-4 w-4" />
             </Button>

@@ -135,7 +135,7 @@ export default function EventComments({ eventId, userId }: EventCommentsProps) {
   const renderComment = (comment: Comment, isReply = false) => (
     <div
       key={comment.id}
-      className={`mb-2 p-2 bg-amber-50 rounded-lg ${isReply ? 'ml-4 border-l-2 border-amber-200' : ''}`}
+      className={`mb-2 p-2 bg-amber-50 rounded-lg ${isReply ? 'ml-4 border-l-2 border-amber-200 ' : ''}`}
     >
       <p className="text-sm font-semibold text-amber-800">{comment.username}</p>
       <p className="text-xs text-gray-700">{comment.commentText}</p>

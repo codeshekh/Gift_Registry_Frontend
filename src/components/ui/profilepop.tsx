@@ -1,22 +1,22 @@
 'use client'
 
 import { useState, useRef } from 'react';
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Button } from "@/components/ui/button"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import Input from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Settings, User, Upload, Trash2 } from "lucide-react"
-import { toast } from 'react-toastify'
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import Input from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Settings, User, Upload, Trash2, LogOut } from "lucide-react";
+import { toast } from 'react-toastify';
 import { useSession } from '@/context/SessionContext';
-import { useRouter } from 'next/navigation';  // Use the correct router import for Next.js 13+
+import { useRouter } from 'next/navigation';
+import AddressForm from './address';
 
 interface ProfileProps {
-  
-  name: string
-  email: string
-  profilePic?: string
+  name: string;
+  email: string;
+  profilePic?: string;
 }
 
 export default function ProfilePopover({ name, email, profilePic }: ProfileProps) {
@@ -24,12 +24,17 @@ export default function ProfilePopover({ name, email, profilePic }: ProfileProps
   const [editedName, setEditedName] = useState(name);
   const [editedEmail, setEditedEmail] = useState(email);
   const [editedProfilePic, setEditedProfilePic] = useState(profilePic);
+  const [isEditingAddress, setIsEditingAddress] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const session = useSession();
-  const userId = session?.user?.id;
+  const userId = session?.user?.id;  // Assuming userId is a number
 
-  const router = useRouter();  // Use useRouter from next/navigation directly
+  const router = useRouter();
+
+  const handleCloseAddressDialog = () => {
+    setIsEditingAddress(false);
+  };
 
   const handleSave = async () => {
     try {
@@ -51,9 +56,9 @@ export default function ProfilePopover({ name, email, profilePic }: ProfileProps
 
       const updatedUser = await response.json();
       // Update the local state with the new values
-      name = updatedUser.username;
-      email = updatedUser.email;
-      profilePic = updatedUser.profilePic;
+      setEditedName(updatedUser.username);
+      setEditedEmail(updatedUser.email);
+      setEditedProfilePic(updatedUser.profilePic);
 
       setIsEditing(false);
       toast.success('Profile updated successfully');
@@ -75,7 +80,7 @@ export default function ProfilePopover({ name, email, profilePic }: ProfileProps
         }
 
         toast.success('Account deleted successfully');
-        router.push('/');  // Use the router to redirect after deletion
+        router.push('/');
       } catch (error) {
         console.error('Error deleting account:', error);
         toast.error('Failed to delete account');
@@ -92,6 +97,17 @@ export default function ProfilePopover({ name, email, profilePic }: ProfileProps
       };
       reader.readAsDataURL(file);
     }
+  };
+
+  const handleLogout = () => {
+    if (!session) {
+      toast.error('No active session');
+      return;
+    }
+
+    session.logout();  // Assuming you have a `logout` method in your session context
+    router.push('/');
+    toast.success('Logged out successfully');
   };
 
   return (
@@ -119,7 +135,9 @@ export default function ProfilePopover({ name, email, profilePic }: ProfileProps
             <p className="text-sm text-muted-foreground">{email}</p>
           </div>
         </div>
-        <div className="mt-4 flex justify-end">
+
+        <div className="mt-4 flex justify-between space-x-2">
+          {/* Edit Profile Dialog */}
           <Dialog open={isEditing} onOpenChange={setIsEditing}>
             <DialogTrigger asChild>
               <Button variant="outline" size="sm" className="text-white bg-black border-white">
@@ -189,6 +207,27 @@ export default function ProfilePopover({ name, email, profilePic }: ProfileProps
               </div>
             </DialogContent>
           </Dialog>
+
+          {/* Edit Address Dialog */}
+          <Dialog open={isEditingAddress} onOpenChange={setIsEditingAddress}>
+            <DialogTrigger asChild>
+              <Button variant="outline" size="sm" className="text-white bg-black border-white">
+                Edit Address
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="bg-black text-white">
+              <DialogHeader>
+                <DialogTitle className="text-white">Edit Address</DialogTitle>
+              </DialogHeader>
+              {userId && <AddressForm userId={userId} onSave={handleCloseAddressDialog} />}
+            </DialogContent>
+          </Dialog>
+
+          {/* Logout Button */}
+          <Button onClick={handleLogout} className="text-white bg-gray-800 border-white h-8 w-14">
+            <LogOut className="h-4 w-4 " />
+          
+          </Button>
         </div>
       </PopoverContent>
     </Popover>
