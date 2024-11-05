@@ -1,120 +1,171 @@
-// AddressForm.tsx
-import { useState } from 'react';
-import { Button } from "@/components/ui/button"; // Adjust the import paths as per your project structure
-import Input from "@/components/ui/input"; // Adjust the import paths as per your project structure
-import { Label } from "@/components/ui/label"; // Adjust the import paths as per your project structure
-import { toast } from 'react-toastify';
+'use client'
+
+import { useState, useEffect } from 'react'
+import { Button } from "@/components/ui/button"
+import  Input  from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { toast } from 'react-toastify'
+import { Copy } from 'lucide-react'
 
 interface AddressFormProps {
-    userId: number;  // Expect a number, not a string
-    onSave: () => void; // Callback function to refresh or re-fetch the updated address
+  userId: number
+  onSave: () => void
 }
 
-export default function AddressForm({ userId, onSave }: AddressFormProps) {
-    const [address, setAddress] = useState({
-        addressLine1: '',
-        addressLine2: '',
-        landmark: '',
-        pincode: 0,
-        city: '',
-        country: '',
-    });
+interface Address {
+  addressLine1: string
+  addressLine2: string
+  landmark: string
+  pincode: number
+  city: string
+  country: string
+}
 
-    const handleSaveAddress = async () => {
-        // Validate pincode
-        if (!Number.isInteger(address.pincode) || address.pincode <= 0) {
-            toast.error('Please enter a valid pincode');
-            return;
-        }
+export default function Component({ userId, onSave = () => {} }: AddressFormProps) {
+    
+  const [address, setAddress] = useState<Address>({
+    addressLine1: '',
+    addressLine2: '',
+    landmark: '',
+    pincode: 0,
+    city: '',
+    country: '',
+  })
 
-        try {
-            // Send a POST request to create a new address
-            const response = await fetch(`http://localhost:4000/v1/users/address`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ 
-                    userId, // Include userId in the request body
-                    ...address 
-                }),
-            });
+  const [savedAddress, setSavedAddress] = useState<Address | null>(null)
 
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.message || 'Failed to create address');
-            }
+  useEffect(() => {
+    fetchAddress()
+  }, [userId])
 
-            const responseData = await response.json(); // Get the response data
-            console.log('Address Created:', responseData.data); // Log the created address data for debugging
+  const fetchAddress = async () => {
+    try {
+      const response = await fetch(`http://localhost:4000/v1/users/address/${userId}`); // Corrected the URL
+      if (!response.ok) {
+        throw new Error('Failed to fetch address');
+      }
+      const data = await response.json();
+      console.log(data);
+      // Access the 'data' array from the response
+      if (data && data.data) {
+        setAddress(data.data[0]); // Assuming you want the first address
+        setSavedAddress(data.data[0]); // Set saved address to the first one
+      } else {
+        throw new Error('No address data found');
+      }
+    } catch (error) {
+      console.error('Error fetching address:', error);
+      toast.error('Failed to fetch address');
+    }
+  }
 
-            onSave(); // Callback to refresh or re-fetch the updated address
-            toast.success('Address created successfully'); // Notify the user
-        } catch (error) {
-            console.error('Error creating address:', error);
-            toast.error('Failed to create address'); // Notify the user
-        }
-    };
+  const handleSaveAddress = async () => {
+    if (!Number.isInteger(address.pincode) || address.pincode <= 0) {
+      toast.error('Please enter a valid pincode')
+      return
+    }
 
-    return (
-        <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="addressLine1" className="text-right text-white">Address Line 1</Label>
-                <Input
-                    id="addressLine1"
-                    value={address.addressLine1}
-                    onChange={(e) => setAddress({ ...address, addressLine1: e.target.value })}
-                    className="col-span-3 bg-gray-800 text-white border-gray-600"
-                />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="addressLine2" className="text-right text-white">Address Line 2</Label>
-                <Input
-                    id="addressLine2"
-                    value={address.addressLine2}
-                    onChange={(e) => setAddress({ ...address, addressLine2: e.target.value })}
-                    className="col-span-3 bg-gray-800 text-white border-gray-600"
-                />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="landmark" className="text-right text-white">Landmark</Label>
-                <Input
-                    id="landmark"
-                    value={address.landmark}
-                    onChange={(e) => setAddress({ ...address, landmark: e.target.value })}
-                    className="col-span-3 bg-gray-800 text-white border-gray-600"
-                />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="pincode" className="text-right text-white">Pincode</Label>
-                <Input
-                    id="pincode"
-                    value={address.pincode === 0 ? '' : address.pincode}  // Default to empty if 0
-                    onChange={(e) => setAddress({ ...address, pincode: parseInt(e.target.value) || 0 })}
-                    className="col-span-3 bg-gray-800 text-white border-gray-600"
-                />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="city" className="text-right text-white">City</Label>
-                <Input
-                    id="city"
-                    value={address.city}
-                    onChange={(e) => setAddress({ ...address, city: e.target.value })}
-                    className="col-span-3 bg-gray-800 text-white border-gray-600"
-                />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="country" className="text-right text-white">Country</Label>
-                <Input
-                    id="country"
-                    value={address.country}
-                    onChange={(e) => setAddress({ ...address, country: e.target.value })}
-                    className="col-span-3 bg-gray-800 text-white border-gray-600"
-                />
-            </div>
-            <Button onClick={handleSaveAddress} className="text-white bg-gray-800 border-white">
-                Save Address
-            </Button>
+    try {
+      const response = await fetch(`http://localhost:4000/v1/users/address`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          userId,
+          ...address 
+        }),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.message || 'Failed to create address')
+      }
+
+      const responseData = await response.json()
+      console.log('Address Created:', responseData.data)
+
+      setSavedAddress(address)
+      onSave()
+      toast.success('Address created successfully')
+    } catch (error) {
+      console.error('Error creating address:', error)
+      toast.error('Failed to create address')
+    }
+  }
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text)
+    toast.success('Copied to clipboard')
+  }
+
+  const renderInput = (label: string, key: keyof Address, type: string = 'text') => (
+    <div className="grid gap-2">
+      <Label htmlFor={key}>{label}</Label>
+      <div className="flex">
+        <Input
+          id={key}
+          placeholder={label}
+          type={type}
+          value={address[key] === 0 && type === 'number' ? '' : address[key]}
+          onChange={(e) => setAddress({ ...address, [key]: type === 'number' ? parseInt(e.target.value) || 0 : e.target.value })}
+          className="flex-grow"
+        />
+        <Button
+          variant="outline"
+          size="icon"
+          className="ml-2"
+          onClick={() => copyToClipboard(address[key].toString())}
+          aria-label={`Copy ${label}`}
+        >
+          <Copy className="h-4 w-4" />
+        </Button>
+      </div>
+    </div>
+  )
+
+  const renderSavedField = (label: string, value: string | number) => (
+    <div className="flex items-center justify-between py-2">
+      <span className="font-medium">{label}:</span>
+      <div className="flex items-center">
+        <span>{value}</span>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="ml-2"
+          onClick={() => copyToClipboard(value.toString())}
+          aria-label={`Copy ${label}`}
+        >
+          <Copy className="h-4 w-4" />
+        </Button>
+      </div>
+    </div>
+  )
+
+  return (
+    <div className="space-y-6">
+      <div className="grid gap-4">
+        {renderInput('Address Line 1', 'addressLine1')}
+        {renderInput('Address Line 2', 'addressLine2')}
+        {renderInput('Landmark', 'landmark')}
+        {renderInput('Pincode', 'pincode', 'number')}
+        {renderInput('City', 'city')}
+        {renderInput('Country', 'country')}
+      </div>
+      <Button onClick={handleSaveAddress} className="w-full">
+        Save Address
+      </Button>
+      {/* {savedAddress && (
+        <div className="mt-6 p-4 border rounded-md">
+          <h2 className="text-lg font-semibold mb-2">Saved Address</h2>
+          {renderSavedField('Address Line 1', savedAddress.addressLine1)}
+          {renderSavedField('Address Line 2', savedAddress.addressLine2)}
+          {renderSavedField('Landmark', savedAddress.landmark)}
+          {renderSavedField('Pincode', savedAddress.pincode)}
+          {renderSavedField('City', savedAddress.city)}
+          {renderSavedField('Country', savedAddress.country)}
         </div>
-    );
+      )} */}
+    </div>
+  )
 }

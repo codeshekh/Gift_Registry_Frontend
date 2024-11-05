@@ -78,7 +78,7 @@ export default function HomeDashboard() {
               </div>
               <span className="absolute bottom-0 left-0 bg-white px-2 py-1 text-sm text-orange-500 font-semibold">Create</span>
             </div>
-            <div>
+            {/* <div>
               <Button 
                 variant="outline" 
                 size="sm" 
@@ -96,7 +96,7 @@ export default function HomeDashboard() {
                 <Share2 className="w-6 h-6" />
                 <span className="ml-1">Share</span>
               </Button>
-            </div>
+            </div> */}
 
             <div className="absolute top-20 right-16 w-64 h-64 md:w-96 md:h-96 rounded-full overflow-hidden">
               <div className="absolute bg-white rounded-full opacity-20 w-96 h-96" />

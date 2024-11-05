@@ -22,6 +22,7 @@ interface Group {
   description: string
   memberIds: number[]
   members?: User[]
+  theme?:string
 }
 
 interface User {
@@ -37,10 +38,22 @@ interface UpdateGroupDto {
   removedMembers: number[]
 }
 
+const themes = [
+  {
+name: 'Nature',
+BackgroundImage: '/event/giftcard.jpg',
+  },
+  {
+    name: 'Ocean',
+    BackgroundImage: '/event/other.jpg',
+      },
+];
+
 export default function GroupManager() {
   const session = useSession()
   const userId = session?.user?.id
 
+   const [selectedTheme, setSelectedTheme] = useState(themes[0]);
   const [groups, setGroups] = useState<Group[]>([])
   const [users, setUsers] = useState<User[]>([])
   const [isCreateGroupOpen, setIsCreateGroupOpen] = useState(false)
@@ -214,8 +227,11 @@ export default function GroupManager() {
 
   return (
     <div className="container mx-auto p-4">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Group Manager</h1>
+  
+      <div className="flex justify-between items-center mb-6 mt-5">
+
+        <h1 className="text-3xl font-bold"></h1>
+       
         <Dialog open={isCreateGroupOpen} onOpenChange={setIsCreateGroupOpen}>
           <DialogTrigger asChild>
             <Button onClick={() => { setIsCreateGroupOpen(true); resetForm(); }}>

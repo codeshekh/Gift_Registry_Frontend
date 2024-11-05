@@ -5,8 +5,8 @@ import { useRouter } from 'next/navigation'
 import { toast, ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 import { Button } from '@/components/ui/button'
-import  Input from '@/components/ui/input'
-import  Textarea  from '@/components/ui/textarea'
+import Input from '@/components/ui/input'
+import Textarea from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
@@ -23,8 +23,8 @@ interface Event {
   venue: string
   date: string
   sharedGroup: number
-  organizers?: string[];
-  members?: string[];
+  organizers?: string[]
+  members?: string[]
 }
 
 interface Registry {
@@ -44,6 +44,21 @@ interface Gift {
 interface Group {
   id: number
   groupName: string
+}
+
+const getEventTypeBackground = (eventType: string) => {
+  switch (eventType) {
+    case 'BIRTHDAY':
+      return 'bg-birthday-photo bg-cover bg-center'
+    case 'WEDDING':
+      return 'bg-wedding-photo bg-cover bg-center'
+    case 'ANNIVERSARY':
+      return 'bg-anniversary-photo bg-cover bg-center'
+    case 'BABY_SHOWER':
+      return 'bg-babyshower-photo bg-cover bg-center'
+    default:
+      return 'bg-default-photo bg-cover bg-center'
+  }
 }
 
 export default function EventRegistryCreator() {
@@ -66,6 +81,8 @@ export default function EventRegistryCreator() {
     groupId: ''
   })
 
+  const [selectedEventType, setSelectedEventType] = useState('')
+
   useEffect(() => {
     fetchGroups()
   }, [])
@@ -75,7 +92,6 @@ export default function EventRegistryCreator() {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/v1/groups/user/${session?.user?.id}`)
       if (!response.ok) throw new Error('Failed to fetch groups')
       const data = await response.json()
-    console.log(data);
       setGroups(data.data)
     } catch (error) {
       console.error('Error fetching groups:', error)
@@ -175,93 +191,124 @@ export default function EventRegistryCreator() {
   }
 
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-3xl font-bold mb-6">Create Event and Registry</h1>
+    <div className="container mx-auto p-4 ">
+       <h1 className="text-3xl font-bold mb-6"></h1> 
+               {/*                                   form                          */}
+
+
+               <Dialog open={isCreateEventOpen} onOpenChange={setIsCreateEventOpen}>
+  <DialogContent className="sm:max-w-4xl p-0 bg-white/50  "> {/* Set h-full and removed unnecessary padding */}
+    {/* Optionally remove or minimize DialogHeader if not needed */}
+    <DialogHeader className="p-1 m-1"> {/* Remove space from the header */}
+      <DialogTitle></DialogTitle>
+    </DialogHeader>
+
+    <form  
+      onSubmit={handleCreateEvent} 
+      className={`space-y-4 p-5 rounded-md ${getEventTypeBackground(selectedEventType)} flex flex-col h-full bg-cover bg-center`} // h-full for the form to fit the container
+    >
+      <Input 
+        className="bg-white/40 text-black placeholder-black" 
+        placeholder="Event Name"
+        value={newEvent.eventName}
+        onChange={(e) => setNewEvent({ ...newEvent, eventName: e.target.value })}
+        required
+      />
+      <Textarea
+        className="bg-white/40 text-black placeholder-black" 
+        placeholder="Description"
+        value={newEvent.description}
+        onChange={(e) => setNewEvent({ ...newEvent, description: e.target.value })}
+        required
+      />
+      <Select 
+        value={newEvent.eventType}
+        onValueChange={(value) => {
+          setNewEvent({ ...newEvent, eventType: value });
+          setSelectedEventType(value);
+        }}
+      >
+        <SelectTrigger className="text-center bg-white/50">
+          <SelectValue placeholder="Select Event Type" className="placeholder-black " />
+        </SelectTrigger>
+        <SelectContent>
+          {eventTypes.map((type) => (
+            <SelectItem key={type} value={type}>
+              {type}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      <Input
+        className="bg-white/40 text-black placeholder-black" 
+        placeholder="Venue"
+        value={newEvent.venue}
+        onChange={(e) => setNewEvent({ ...newEvent, venue: e.target.value })}
+        required
+      />
+      <Input
+        className="bg-white/40 text-center text-black placeholder-black" 
+        type="date"
+        value={newEvent.date}
+        onChange={(e) => setNewEvent({ ...newEvent, date: e.target.value })}
+        required
+      />
+      <Select
+        value={newEvent.groupId}
+        onValueChange={(value) => setNewEvent({ ...newEvent, groupId: value })}
+      >
+        <SelectTrigger className="text-center bg-white/50">
+          <SelectValue placeholder="Select Group" className="placeholder-black" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="none">No Group</SelectItem>
+          {groups.map((group) => (
+            <SelectItem key={group.id} value={group.id.toString()}>
+              {group.groupName}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      <Button type="submit" className="mx-auto">
+        Create
+      </Button>
+    </form>
+  </DialogContent>
+</Dialog>
+
       
-      <Dialog open={isCreateEventOpen} onOpenChange={setIsCreateEventOpen}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Create New Event</DialogTitle>
-          </DialogHeader>
-          <form onSubmit={handleCreateEvent} className="space-y-4">
-            <Input
-              placeholder="Event Name"
-              value={newEvent.eventName}
-              onChange={(e) => setNewEvent({ ...newEvent, eventName: e.target.value })}
-              required
-            />
-            <Textarea
-              placeholder="Description"
-              value={newEvent.description}
-              onChange={(e) => setNewEvent({ ...newEvent, description: e.target.value })}
-              required
-            />
-            <Select
-              value={newEvent.eventType}
-              onValueChange={(value) => setNewEvent({ ...newEvent, eventType: value })}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select Event Type" />
-              </SelectTrigger>
-              <SelectContent>
-                {eventTypes.map((type) => (
-                  <SelectItem key={type} value={type}>
-                    {type}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Input
-              placeholder="Venue"
-              value={newEvent.venue}
-              onChange={(e) => setNewEvent({ ...newEvent, venue: e.target.value })}
-              required
-            />
-            <Input
-              type="date"
-              value={newEvent.date}
-              onChange={(e) => setNewEvent({ ...newEvent, date: e.target.value })}
-              required
-            />
-            <Select
-              value={newEvent.groupId}
-              onValueChange={(value) => setNewEvent({ ...newEvent, groupId: value })}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select Group" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">No Group</SelectItem>
-                {groups.map((group) => (
-                  <SelectItem key={group.id} value={group.id.toString()}>
-                    {group.groupName}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Button type="submit">Create Event and Registry</Button>
-          </form>
-        </DialogContent>
-      </Dialog>
+{     /*                                  form                           */}
+
 
       {event && (
         <div className="mt-8">
-          <Card>
-            <CardHeader>
-              <CardTitle>Event Details</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p><strong>Event Name:</strong> {event.eventName}</p>
-              <p><strong>Description:</strong> {event.description}</p>
-              <p><strong>Type:</strong> {event.eventType}</p>
-              <p><strong>Venue:</strong> {event.venue}</p>
-              <p><strong>Date:</strong> {event.date}</p>
-              <p><strong>Group:</strong>{event.sharedGroup ? groups.length > 0 && groups.find(g => g.id === event.sharedGroup)?.groupName : 'No Group'}
-              </p>
-              <p><strong>Created By:</strong> {session?.user?.username}</p>
-              <p><strong>Creator Email:</strong> {session?.user?.email}</p>
-            </CardContent>
-          </Card>
+          <Card className={`${getEventTypeBackground(event.eventType)} transition-colors duration-200 max-w-full h-auto mx-auto `}>
+  <CardHeader>
+    <CardDescription className='text-center text-border'>{event.eventType}</CardDescription>
+  </CardHeader>
+  <CardContent>
+    <div className="flex">
+      {/* Left side (Description and Venue) */}
+      <div className="flex-1 pr-4">
+        <p className="mb-2"><strong>Description:</strong> {event.description}</p>
+        <p><strong>Venue:</strong> {event.venue}</p>
+      </div>
+
+      {/* Separator line */}
+      <div className="w-px bg-gray-200 mx-4" />
+
+      {/* Right side (Date, Group, Created By, and Email) */}
+      <div className="flex-1 pl-4 -mt-2">
+        <p className="mb-2"><strong>Date:</strong> {event.date} </p>
+        <p className="mb-2"><strong>Name</strong> {event.eventName}</p>
+        <p className="mb-2"><strong>Group:</strong> {event.sharedGroup ? groups.find(g => g.id === event.sharedGroup)?.groupName : 'No Group'}</p>
+        <p className="mb-2"><strong>Created By:</strong> {session?.user?.username}</p>
+        <p><strong>Creator Email:</strong> {session?.user?.email}</p>
+      </div>
+    </div>
+  </CardContent>
+</Card>
+
 
           {registry && (
             <div className="mt-8">

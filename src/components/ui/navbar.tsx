@@ -37,10 +37,16 @@ const Navbar: React.FC = () => {
           <span className="absolute left-0 bottom-0 w-full h-0.5 bg-black scale-x-0 hover:scale-x-100 transition-transform origin-left duration-300"></span>
         </Link>
 
-        <Link href="/registries" className="relative mr-16 flex items-center text-black font-bold hover:text-gray-600 transition duration-300" aria-label="Registries">
+        {/* <Link href="/registries" className="relative mr-16 flex items-center text-black font-bold hover:text-gray-600 transition duration-300" aria-label="Registries">
           Registry
           <span className="absolute left-0 bottom-0 w-full h-0.5 bg-black scale-x-0 hover:scale-x-100 transition-transform origin-left duration-300"></span>
-        </Link>
+        </Link> */}
+       
+{/*        
+        <Link href="/scrape" className="relative mr-16 flex items-center text-black font-bold hover:text-gray-600 transition duration-300" aria-label="Registries">
+          Scraper
+          <span className="absolute left-0 bottom-0 w-full h-0.5 bg-black scale-x-0 hover:scale-x-100 transition-transform origin-left duration-300"></span>
+        </Link> */}
 
         {!session ? (
           <div className='mr-16'>
@@ -61,7 +67,7 @@ const Navbar: React.FC = () => {
               <ProfilePopover 
                 name={session.user?.username || 'User'}
                 email={session.user?.email || 'user@example.com'}
-                profilePic={session.user?.profilePic } 
+                profilePic={session.user?.profilePic ?? ""} 
               />
             </div>
           </div>

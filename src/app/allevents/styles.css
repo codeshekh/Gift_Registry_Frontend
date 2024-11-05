@@ -1,0 +1,17 @@
+.text-border {
+    position: relative;
+    display: inline-block;
+    color: black; /* Text color */
+    text-shadow: 2px 2px 4px rgba(255, 255, 255, 0.7); /* Increase opacity for a more noticeable shadow */
+}
+
+.text-border::before {
+    content: attr(data-text);
+    position: absolute;
+    left: 0;
+    top: 0;
+    color: yellow; /* Border color */
+    z-index: -1; /* Place behind the text */
+    filter: blur(1px); /* Adjust for softness */
+    text-shadow: 4px 4px 6px rgba(255, 255, 255, 0.7); /* Enhanced white shadow effect */
+}

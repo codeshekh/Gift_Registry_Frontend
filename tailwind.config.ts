@@ -55,7 +55,14 @@ const config: Config = {
   			lg: 'var(--radius)',
   			md: 'calc(var(--radius) - 2px)',
   			sm: 'calc(var(--radius) - 4px)'
-  		}
+  		},
+		  backgroundImage: {
+			'birthday-photo': "url('/event/birthday.jpg')",
+			'wedding-photo': "url('/event/wedding.jpg')",
+			'anniversary-photo': "url('/event/anniversary.png')",
+			'babyshower-photo': "url('/event/BabyShowers.jpg')",
+			'default-photo': "url('/event/other.jpg')",
+		  },
   	}
   },
   plugins: [require("tailwindcss-animate")],
