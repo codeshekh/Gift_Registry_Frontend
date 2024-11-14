@@ -1,5 +1,5 @@
 "use client";
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 
 // Define the shape of your session data
@@ -25,7 +25,7 @@ interface SessionProviderProps {
 // Create a Provider component
 export const SessionProvider = ({ children }: SessionProviderProps) => {
   const [session, setSession] = useState<CustomSession>({
-    logout: () => console.log('No user to log out'), // Default logout function
+    logout: () => {}, // Empty default logout function
   });
 
   const searchParams = useSearchParams();
@@ -51,6 +51,7 @@ export const SessionProvider = ({ children }: SessionProviderProps) => {
         handleUserLogin(user); // Handle the user login from URL parameter
       } catch (error) {
         console.error('Error parsing user data:', error);
+        setSession({ logout: () => {} }); // Reset session state in case of error
       }
     } else {
       // Load user data from localStorage if no user in URL
@@ -59,12 +60,14 @@ export const SessionProvider = ({ children }: SessionProviderProps) => {
         handleUserLogin(JSON.parse(storedUser)); // Load user from localStorage
       }
     }
-  }, [searchParams]);
+  }, [searchParams]); // Dependency array ensures this effect runs on searchParams change
 
   return (
-    <SessionContext.Provider value={session}>
-      {children}
-    </SessionContext.Provider>
+    <Suspense fallback={<div>Loading session...</div>}>
+      <SessionContext.Provider value={session}>
+        {children}
+      </SessionContext.Provider>
+    </Suspense>
   );
 };
 
