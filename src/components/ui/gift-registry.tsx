@@ -37,7 +37,7 @@ interface Gift {
   giftStatus: boolean
 }
 
-export default function GiftComponent({ registryId, onBuyGift }: GiftComponentProps) {
+export default function GiftComponent({ registryId }: GiftComponentProps) {
   const [gifts, setGifts] = useState<Gift[]>([])
   const [loading, setLoading] = useState(false)
   const [isAddingGift, setIsAddingGift] = useState(false)

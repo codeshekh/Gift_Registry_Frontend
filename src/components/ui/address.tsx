@@ -124,23 +124,23 @@ export default function Component({ userId, onSave = () => {} }: AddressFormProp
     </div>
   )
 
-  const renderSavedField = (label: string, value: string | number) => (
-    <div className="flex items-center justify-between py-2">
-      <span className="font-medium">{label}:</span>
-      <div className="flex items-center">
-        <span>{value}</span>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="ml-2"
-          onClick={() => copyToClipboard(value.toString())}
-          aria-label={`Copy ${label}`}
-        >
-          <Copy className="h-4 w-4" />
-        </Button>
-      </div>
-    </div>
-  )
+  // const renderSavedField = (label: string, value: string | number) => (
+  //   <div className="flex items-center justify-between py-2">
+  //     <span className="font-medium">{label}:</span>
+  //     <div className="flex items-center">
+  //       <span>{value}</span>
+  //       <Button
+  //         variant="ghost"
+  //         size="icon"
+  //         className="ml-2"
+  //         onClick={() => copyToClipboard(value.toString())}
+  //         aria-label={`Copy ${label}`}
+  //       >
+  //         <Copy className="h-4 w-4" />
+  //       </Button>
+  //     </div>
+  //   </div>
+  // )
 
   return (
     <div className="space-y-6">

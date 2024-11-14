@@ -6,11 +6,6 @@ import { useRouter } from 'next/navigation';
 export default function Home() {
   const router = useRouter();
 
-  const handleSignup = () => {
-    // Redirect to dashboard after signup
-    router.push('/dashboard');
-  };
-
   return (
     <div className='bg-white'>
         <GoogleLoginButton />  

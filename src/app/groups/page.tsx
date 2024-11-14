@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import Input from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { PlusIcon, TrashIcon, PencilIcon, UsersIcon } from 'lucide-react'
@@ -53,7 +53,7 @@ export default function GroupManager() {
   const session = useSession()
   const userId = session?.user?.id
 
-   const [selectedTheme, setSelectedTheme] = useState(themes[0]);
+  //  const [selectedTheme, setSelectedTheme] = useState(themes[0]);
   const [groups, setGroups] = useState<Group[]>([])
   const [users, setUsers] = useState<User[]>([])
   const [isCreateGroupOpen, setIsCreateGroupOpen] = useState(false)

@@ -22,7 +22,7 @@ const ScraperComponent: React.FC = () => {
             } else {
                 setError(data.error);
             }
-        } catch (err) {
+        } catch (error) {
             setError('An error occurred while fetching the data.');
         } finally {
             setLoading(false);

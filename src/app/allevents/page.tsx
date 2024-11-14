@@ -3,10 +3,9 @@
 import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import GiftComponent from '@/components/ui/gift-registry';
-import { CalendarDays, Gift, Users, Loader2, Edit, Trash2, Share2 } from "lucide-react";
+import {  Gift,  Loader2, Edit, Trash2, Share2 } from "lucide-react";
 import { toast, ToastContainer } from 'react-toastify';
 import { useSession } from '@/context/SessionContext';
 import 'react-toastify/dist/ReactToastify.css';

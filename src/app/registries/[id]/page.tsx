@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import Input from "@/components/ui/input";
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { PlusIcon, ArrowLeft, ShoppingCart, Check, Link, ExternalLink } from 'lucide-react';
+import { PlusIcon, ArrowLeft, ShoppingCart, Check, Link} from 'lucide-react';
 
 interface Gift {
   id: number;

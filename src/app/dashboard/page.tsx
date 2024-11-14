@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import { Button } from "@/components/ui/button";
-import { PlusSquare, Share2 } from 'lucide-react';
+import { PlusSquare } from 'lucide-react';
 import CreateEventForm from '@/components/ui/createeventbutton'; // Ensure this is the correct path
 import { useSession } from '@/context/SessionContext';
 import { useRouter } from 'next/navigation';
@@ -22,13 +22,13 @@ const mockGroups: Group[] = [
 
 export default function HomeDashboard() {
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [showParticles, setShowParticles] = useState(false); // State to control the form visibility
+  const [showParticles] = useState(false); // State to control the form visibility
   const session = useSession();
   const userId = session?.user?.id;
   const router = useRouter();
-  const handleCreateRegistry = () => {
-    setIsFormOpen(true); 
-  };
+  // const handleCreateRegistry = () => {
+  //   setIsFormOpen(true); 
+  // };
 
   const handleCreateEvent = async (eventData: any) => {
   
@@ -37,12 +37,12 @@ export default function HomeDashboard() {
   };
 
 
-  const handleShareClick = () => {
-    setShowParticles(true);
-    setTimeout(() => {
-      setShowParticles(false); // Hide particles after a delay
-    }, 3000); // Adjust the delay as needed
-  };
+  // const handleShareClick = () => {
+  //   setShowParticles(true);
+  //   setTimeout(() => {
+  //     setShowParticles(false); // Hide particles after a delay
+  //   }, 3000); // Adjust the delay as needed
+  // };
 
 
 

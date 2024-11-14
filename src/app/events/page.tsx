@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+// import { useRouter } from 'next/navigation'
 import { toast, ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 import { Button } from '@/components/ui/button'
@@ -62,7 +62,7 @@ const getEventTypeBackground = (eventType: string) => {
 }
 
 export default function EventRegistryCreator() {
-  const router = useRouter()
+  // const router = useRouter()
   const session = useSession()
   const [event, setEvent] = useState<Event | null>(null)
   const [registry, setRegistry] = useState<Registry | null>(null)
